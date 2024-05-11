@@ -25,6 +25,7 @@ public class Manager : MonoBehaviour
 
     // Objects
     public GameObject EndArea;
+    public GameObject ShoulderAnchor;
     public GameObject Message;
     private TextMeshProUGUI MessageText;
 
@@ -114,7 +115,8 @@ public class Manager : MonoBehaviour
     // Data Recording
     private float Interval = 0.1f;
     private float Timer = 0f;
-    private Vector3 StartVector;
+    private Vector3 HeadStartVector;
+    private Vector3 ShoulderStartVector;
 
     [Header("Saving Path")]
     public string Folder = @"";
@@ -168,7 +170,8 @@ public class Manager : MonoBehaviour
                             count ++;
                             testing = true;
 
-                            StartVector = Camera.main.transform.forward;
+                            HeadStartVector = Camera.main.transform.forward;
+                            ShoulderStartVector = ShoulderAnchor.transform.forward;
                         }
                         ready = false;
                     } else {
@@ -283,9 +286,9 @@ public class Manager : MonoBehaviour
             float r = EtoDirection(TaskList[count-1].direction);
             float v = EtoMaxViewingRange(TaskList[count-1].direction) * EtoRange(TaskList[count-1].percentage);
             float t = Time.time;
-            float h = Vector3.Angle(StartVector, Camera.main.transform.forward);
+            float h = Vector3.Angle(HeadStartVector, Camera.main.transform.forward);
             float g = 0f;
-            float sh = 0f;
+            float sh = Vector3.Angle(ShoulderStartVector, ShoulderAnchor.transform.forward);
 
             string Data = ParticipantID.ToString() + ',' + Posture.ToString() + ',' +
             r.ToString() + ',' + TaskList[count-1].percentage.ToString() + "," + v.ToString() + "," + t.ToString() + "," +

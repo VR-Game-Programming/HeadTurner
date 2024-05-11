@@ -177,7 +177,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1438233529585660198, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
       propertyPath: RigidBodyId
-      value: 1014
+      value: 1016
+      objectReference: {fileID: 0}
+    - target: {fileID: 2452106846824428253, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+      propertyPath: m_Name
+      value: Shoulder
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -323,6 +327,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   EndArea: {fileID: 1094073262}
+  ShoulderAnchor: {fileID: 719863599}
   Message: {fileID: 1190142452}
   ParticipantID: 1
   Posture: 0
@@ -343,7 +348,7 @@ MonoBehaviour:
   - direction: 0
     percentage: 2
   - direction: 5
-    percentage: 1
+    percentage: 2
   Folder: Result
 --- !u!4 &336128671
 Transform:
@@ -360,6 +365,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &719863599 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2452106846824428253, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+  m_PrefabInstance: {fileID: 27786283}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &750297139
 GameObject:
   m_ObjectHideFlags: 0
