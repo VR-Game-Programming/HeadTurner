@@ -2,6 +2,8 @@
 
 Unity Source Code for HeadTurner (CHI 2025)
 
+---
+
 ### Task1
 每一名受試者的每個姿勢執行一次  
 **input:**  
@@ -12,6 +14,8 @@ Unity Source Code for HeadTurner (CHI 2025)
 | Participant | Posture | Direction | MaxViewingRange |
 | - | - | - | - |
 | 1 | Standing | 180 | 90 |
+
+---
 
 ### Task2 (Observation1)
 每一名受試者的每個姿勢執行八次 (四個測試跑一次)  
