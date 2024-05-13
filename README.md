@@ -4,10 +4,10 @@ Unity Source Code for HeadTurner (CHI 2025)
 
 ### Task1
 每一名受試者的每個姿勢執行一次  
-input:  
+**input:**  
 8 directions
 
-output:  
+**output:**  
 `Formative_T1_[Participant]_[Posture].csv`  
 | Participant | Posture | Direction | MaxViewingRange |
 | - | - | - | - |
@@ -15,11 +15,11 @@ output:
 
 ### Task2 (Observation1)
 每一名受試者的每個姿勢執行八次 (四個測試跑一次)  
-input:  
+**input:**  
 8 maximum viewing range (from task1，每個姿勢輸入一次就好)
 4 direction-range pairs
 
-output:  
+**output:**  
 `Formative_O1_[Participant]_[Posture].csv`  
 | Participant | Posture | Direction | RangePercentage | ViewingRange | time | HeadRotationAngle | GazingAngle | ShoulderRotationAngle | 
 | - | - | - | - | - | - | - | - | - |
