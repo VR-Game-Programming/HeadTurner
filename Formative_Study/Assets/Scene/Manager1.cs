@@ -1,11 +1,85 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Meta.WitAi.Data.Entities;
 using TMPro;
-using Unity.VisualScripting;
-using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
+using System.IO.Ports;
+using System.Threading;
+
+public class EMGLogger_T
+{
+    private SerialPort _serialPort;
+    private StreamWriter _dataWriter;
+    private StreamWriter _timestampWriter;
+    private Thread _thread;
+    private bool _startLogging;
+    private bool _endLogging;
+    private string _cur_angle;
+    private string _cur_posture;
+
+    private string _cur_start_time;
+
+
+    public EMGLogger_T(string portName = "COM5", int baudRate = 9600, string dirname = "Result")
+    {
+        _serialPort = new SerialPort(portName, baudRate);
+        _serialPort.Open();
+
+        Directory.CreateDirectory(dirname);
+        string data_path = Path.Combine(dirname, "emgdata");
+        string timestamp_path = Path.Combine(dirname, "timestamp.csv");
+
+        _dataWriter = new StreamWriter(data_path);
+        _timestampWriter = new StreamWriter(timestamp_path);
+        string header = "angle,posture,start_time,end_time,";
+        _timestampWriter.WriteLine(header);
+
+        _thread = new Thread(ReadSerialPort);
+        _thread.Start();
+    }
+
+    private void ReadSerialPort()
+    {
+        while (true)
+        {
+            string data = _serialPort.ReadLine();
+            _dataWriter.WriteLine(data);
+            if (_startLogging)
+            {
+                string timestamp = data.Split(',')[0];
+                _cur_start_time = timestamp;
+                _startLogging = false;
+            }
+            if (_endLogging)
+            {
+                string end_time = data.Split(',')[0];
+                data = _cur_angle + ","
+                    + _cur_posture + ","
+                    + _cur_start_time + ","
+                    + end_time + ",";
+                _timestampWriter.WriteLine(data);
+                _endLogging = false;
+            }
+        }
+    }
+
+    public void start_logging(string angle, string posture)
+    {
+        _startLogging = true;
+        _cur_angle = angle;
+        _cur_posture = posture;
+    }
+
+    public void end_logging()
+    {
+        _endLogging = true;
+    }
+
+    public void close()
+    {
+        _dataWriter.Close();
+        _timestampWriter.Close();
+    }
+}
 
 public class Manager1 : MonoBehaviour
 {
@@ -35,8 +109,10 @@ public class Manager1 : MonoBehaviour
     // Data Setting
     public enum PostureE { Standing, Sitting, Reclining, Lying }
     public enum DirectionE { D0, D45, D90, D135, D180, D225, D270, D315 }
-    public float EtoDirection(DirectionE d) {
-        switch (d) {
+    public float EtoDirection(DirectionE d)
+    {
+        switch (d)
+        {
             case DirectionE.D0:
                 return 0f;
             case DirectionE.D45:
@@ -74,59 +150,85 @@ public class Manager1 : MonoBehaviour
     private FileStream fs;
     private StreamWriter sw;
 
+    private EMGLogger_T emg_logger;
 
-    void Start() {
+
+    void Start()
+    {
         MessageText = Message.GetComponent<TextMeshProUGUI>();
         MessageText.text = "";
 
         // Setting CSV File
-        FullPath = Path.Combine(Folder, "Formative_T1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
+        string filename = "Formative_T1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv";
+        FullPath = Path.Combine(Folder, filename);
         fs = new FileStream(FullPath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
         string Header = "Participant" + ',' + "Posture" + ',' + "Direction" + ',' + "MaxViewingRange";
         sw.WriteLine(Header);
+
+        string emg_folder = Path.Combine(Folder, "emg_data", "Formative_T1_P" + ParticipantID.ToString());
+        emg_logger = new EMGLogger_T(dirname: emg_folder);
     }
 
-    void Update() {
-        if (!endtests) {
-            if (!testing) {
-                if (count >= DirectionList.Count) {
+    void Update()
+    {
+        if (!endtests)
+        {
+            if (!testing)
+            {
+                if (count >= DirectionList.Count)
+                {
                     endtests = true;
                     MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
+                    emg_logger.close();
                 }
-                else {
-                    if (!ready) {
+                else
+                {
+                    if (!ready)
+                    {
                         MessageText.text = "請回到起始區域";
-                    } else {
+                    }
+                    else
+                    {
                         MessageText.text = "按下 [A] 鍵來開始新測試";
                         // start new test
-                        if (OVRInput.GetDown(OVRInput.Button.One)) {
+                        if (OVRInput.GetDown(OVRInput.Button.One))
+                        {
                             CreateNewTrack(EtoDirection(DirectionList[count]), 180);
                             MessageText.text = "請沿著軌道方向旋轉身體到最大距離\n按下 [A] 鍵來結束測試";
 
                             StartVector = Camera.main.transform.forward;
 
-                            count ++;
+                            float angle = EtoDirection(DirectionList[count]);
+                            count++;
                             testing = true;
+                            Debug.Log(angle.ToString() + " " + Posture.ToString());
+                            emg_logger.start_logging(angle.ToString(), Posture.ToString());
                         }
                         ready = false;
                     }
                 }
             }
-            else {
+            else
+            {
                 // change color if collided
-                if (Track != null) {
-                    if (hitTrack) {
+                if (Track != null)
+                {
+                    if (hitTrack)
+                    {
                         Track.startColor = triggerColor;
                         Track.endColor = triggerColor;
                         hitTrack = false;
-                    } else {
+                    }
+                    else
+                    {
                         Track.startColor = lineColor;
                         Track.endColor = lineColor;
                     }
                 }
                 // end test
-                if (OVRInput.GetDown(OVRInput.Button.One)) {
+                if (OVRInput.GetDown(OVRInput.Button.One))
+                {
                     Track.startColor = endColor;
                     Track.endColor = endColor;
 
@@ -137,15 +239,18 @@ public class Manager1 : MonoBehaviour
                     MaxViewingRange = Vector3.Angle(StartVector, EndVector);
 
                     string NewLine = ParticipantID.ToString() + ',' + Posture.ToString() + ','
-                    + EtoDirection(DirectionList[count-1]).ToString() + ',' + MaxViewingRange.ToString();
+                    + EtoDirection(DirectionList[count - 1]).ToString() + ',' + MaxViewingRange.ToString();
                     sw.WriteLine(NewLine);
+                    emg_logger.end_logging();
                 }
             }
         }
     }
 
-    public void CreateNewTrack(float rotationAngle, float viewingRange) {
-        if (!gameObject.TryGetComponent<LineRenderer>(out Track)) {
+    public void CreateNewTrack(float rotationAngle, float viewingRange)
+    {
+        if (!gameObject.TryGetComponent<LineRenderer>(out Track))
+        {
             Track = gameObject.AddComponent<LineRenderer>();
         }
 
@@ -160,7 +265,8 @@ public class Manager1 : MonoBehaviour
         float angleStep = viewingRange / segments;
         float currentAngle = 0f;
 
-        for (int i = 0; i < segments + 1; i++) {
+        for (int i = 0; i < segments + 1; i++)
+        {
             float x = Mathf.Sin(Mathf.Deg2Rad * currentAngle) * radius;
             float z = Mathf.Cos(Mathf.Deg2Rad * currentAngle) * radius;
 
@@ -172,7 +278,8 @@ public class Manager1 : MonoBehaviour
         }
 
         // Generate Mesh Collider
-        if (!gameObject.TryGetComponent<MeshCollider>(out Collider)) {
+        if (!gameObject.TryGetComponent<MeshCollider>(out Collider))
+        {
             Collider = gameObject.AddComponent<MeshCollider>();
         }
         Mesh mesh = new();
@@ -180,11 +287,13 @@ public class Manager1 : MonoBehaviour
         Collider.sharedMesh = mesh;
     }
 
-    public void HitTrack() {
+    public void HitTrack()
+    {
         hitTrack = true;
     }
 
-    public void HitArea() {
+    public void HitArea()
+    {
         ready = true;
     }
 
