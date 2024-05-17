@@ -13,13 +13,13 @@ public class EMGLogger_T
     private Thread _thread;
     private bool _startLogging;
     private bool _endLogging;
+    private bool _running=true;
     private string _cur_angle;
     private string _cur_posture;
-
     private string _cur_start_time;
 
 
-    public EMGLogger_T(string portName = "COM5", int baudRate = 9600, string dirname = "Result")
+    public EMGLogger_T(string portName = "COM4", int baudRate = 9600, string dirname = "Result")
     {
         _serialPort = new SerialPort(portName, baudRate);
         _serialPort.Open();
@@ -39,7 +39,7 @@ public class EMGLogger_T
 
     private void ReadSerialPort()
     {
-        while (true)
+        while (_running)
         {
             string data = _serialPort.ReadLine();
             _dataWriter.WriteLine(data);
@@ -76,6 +76,8 @@ public class EMGLogger_T
 
     public void close()
     {
+        while(_endLogging);
+        _running = false;
         _dataWriter.Close();
         _timestampWriter.Close();
     }
@@ -158,6 +160,8 @@ public class Manager1 : MonoBehaviour
         MessageText = Message.GetComponent<TextMeshProUGUI>();
         MessageText.text = "";
 
+        Debug.Log("load csv object");
+
         // Setting CSV File
         string filename = "Formative_T1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv";
         FullPath = Path.Combine(Folder, filename);
@@ -166,7 +170,9 @@ public class Manager1 : MonoBehaviour
         string Header = "Participant" + ',' + "Posture" + ',' + "Direction" + ',' + "MaxViewingRange";
         sw.WriteLine(Header);
 
-        string emg_folder = Path.Combine(Folder, "emg_data", "Formative_T1_P" + ParticipantID.ToString());
+        Debug.Log("load emg object");
+
+        string emg_folder = Path.Combine(Folder, "emg_data", "Formative_T1_P" + ParticipantID.ToString()+ "_" + Posture.ToString() + ".csv");
         emg_logger = new EMGLogger_T(dirname: emg_folder);
     }
 

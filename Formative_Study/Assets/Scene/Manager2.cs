@@ -24,7 +24,7 @@ public class EMGLogger_O
     public enum Status { Start, Waiting, Back, End }
 
 
-    public EMGLogger_O(string portName = "COM5", int baudRate = 9600, string dirname = "Result")
+    public EMGLogger_O(string portName = "COM4", int baudRate = 9600, string dirname = "Result")
     {
         _serialPort = new SerialPort(portName, baudRate);
         _serialPort.Open();
