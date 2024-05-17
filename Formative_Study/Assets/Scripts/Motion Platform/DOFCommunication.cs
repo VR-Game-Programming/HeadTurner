@@ -57,6 +57,9 @@ public class DOFCommunication : MonoBehaviour
     {
         targerLeftMotor = (int)(left * motorRange);
         targetRightMotor = (int)(right * motorRange);
+        // Clamp the values to the motor range
+        targerLeftMotor = Mathf.Clamp(targerLeftMotor, 0, motorRange);
+        targetRightMotor = Mathf.Clamp(targetRightMotor, 0, motorRange);
     }
     protected void Command(int left, int right)
     {
