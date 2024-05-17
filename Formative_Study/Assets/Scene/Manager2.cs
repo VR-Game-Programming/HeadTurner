@@ -107,6 +107,8 @@ public class Manager2 : MonoBehaviour
     // Objects
     public GameObject EndArea;
     public GameObject ShoulderAnchor;
+    public GameObject LeftEye;
+    public GameObject RightEye;
     public GameObject Message;
     private TextMeshProUGUI MessageText;
 
@@ -186,8 +188,7 @@ public class Manager2 : MonoBehaviour
                 return 0f;
         }
     }
-
-    private float[] MaxViewingRange = new float[8] { 100f, 100f, 100f, 100f, 100f, 100f, 100f, 100f };
+    private float[] MaxViewingRange = new float[8] { 90f, 90f, 90f, 90f, 90f, 90f, 90f, 90f };
 
     [Header("Task Data")]
     public int ParticipantID = 0;
@@ -204,8 +205,8 @@ public class Manager2 : MonoBehaviour
     // Data Recording
     private float Interval = 0.1f;
     private float Timer = 0f;
-    private Vector3 HeadStartVector;
-    private Vector3 ShoulderStartVector;
+    private float t, hPolar, hAzimuth, sPolar, sAzimuth, lgPolar, lgAzimuth, rgPolar, rgAzimuth;
+    private string Status = "not-testing";
 
     [Header("Saving Path")]
     public string Folder = @"";
@@ -248,125 +249,131 @@ public class Manager2 : MonoBehaviour
 
                     MaxViewingRange[direction] = range;
                 }
+                
+                Debug.Log("Read Success!");
             }
         }
 
-        // Setting CSV File
+        // Open CSV File
         FullPath = Path.Combine(Folder, "Formative_O1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
         if (File.Exists(FullPath))
         {
             fs = new FileStream(FullPath, FileMode.Append, FileAccess.Write);
             sw = new StreamWriter(fs);
+            Debug.Log("Open Success!");
         }
         else
         {
             fs = new FileStream(FullPath, FileMode.Create, FileAccess.Write);
             sw = new StreamWriter(fs);
-            string Header = "Participant" + ',' + "Posture" + ',' +
-            "Direction" + ',' + "RangePercentage" + "," + "ViewingRange" + "," + "time" + "," +
-            "HeadRotationAngle" + ',' + "GazingAngle" + ',' + "ShoulderRotationAngle";
+            string Header = "time,Status,HeadPolar,HeadAzimuth,ShoulderPolar,ShoulderAzimuth,LeftGazePolar,LeftGazeAzimuth,RightGazePolar,RightGazeAzimuth";
             sw.WriteLine(Header);
+            Debug.Log("Create Success!");
         }
-
-
-
-
-
     }
 
     void Update()
     {
-        if (endtests) { return; }
-        if (!testing)
-        {
-            if (count >= TaskList.Count)
-            {
-                endtests = true;
-                MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
-                _emg_logger.close();
-            }
-            else
-            {
-                if (ready)
-                {
-                    MessageText.text = "按下 [A] 鍵來開始新測試";
-                    // start new test
-                    if (OVRInput.GetDown(OVRInput.Button.One))
-                    {
-                        float rotationAngle = EtoDirection(TaskList[count].direction);
-                        float viewingRange = EtoMaxViewingRange(TaskList[count].direction) * EtoRange(TaskList[count].percentage);
-
-                        CreateNewTrack(rotationAngle, viewingRange);
-
-                        MessageText.text = "請沿著軌道方向旋轉身體直到終點";
-
-                        count++;
-                        testing = true;
-
-                        HeadStartVector = Camera.main.transform.forward;
-                        ShoulderStartVector = ShoulderAnchor.transform.forward;
-                        _emg_logger.start_logging(viewingRange.ToString(), Posture.ToString());
-                    }
-                    ready = false;
-                }
-                else
-                {
-                    MessageText.text = "請回到起始區域";
-                }
-            }
+        if (endtests) {
+            sw.Close();
+            fs.Close();
+            return;
         }
-        else
-        {
-            // change color if collided
-            if (Track != null)
+        else{
+            if (!testing)
             {
-                if (hitTrack)
+                if (count >= TaskList.Count)
                 {
-                    Track.startColor = triggerColor;
-                    Track.endColor = triggerColor;
-                    hitTrack = false;
+                    endtests = true;
+                    MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
+                    sw.Close();
+                    fs.Close();
+
+                    _emg_logger.close();
                 }
                 else
                 {
-                    Track.startColor = lineColor;
-                    Track.endColor = lineColor;
+                    if (ready)
+                    {
+                        MessageText.text = "按下 [A] 鍵來開始新測試";
+                        // start new test
+                        if (OVRInput.GetDown(OVRInput.Button.One))
+                        {
+                            float rotationAngle = EtoDirection(TaskList[count].direction);
+                            float viewingRange = EtoMaxViewingRange(TaskList[count].direction) * EtoRange(TaskList[count].percentage);
+
+                            CreateNewTrack(rotationAngle, viewingRange);
+                            Status = "Direction " + rotationAngle.ToString() + " / Range " + TaskList[count].percentage.ToString();
+
+                            MessageText.text = "請沿著軌道方向旋轉身體直到終點";
+
+                            count++;
+                            testing = true;
+                            _emg_logger.start_logging(viewingRange.ToString(), Posture.ToString());
+                        }
+                        ready = false;
+                    }
+                    else
+                    {
+                        MessageText.text = "請回到起始區域";
+                    }
                 }
-            }
-
-            // timer countdown
-            if (waiting)
-            {
-                float seconds = Mathf.FloorToInt(TimeRemain % 60);
-                MessageText.text = "請維持此姿勢\n還剩" + seconds + "秒";
-                // end test
-                if (TimeRemain > 0)
-                {
-                    TimeRemain -= Time.deltaTime;
-                }
-                else
-                {
-                    Track.startColor = endColor;
-                    Track.endColor = endColor;
-
-                    EndArea.transform.position = new Vector3(0, 20, 0);
-
-                    testing = false;
-                    ready = false;
-
-                    TimeRemain = 5f;
-                    _emg_logger.end_logging();
-                }
-
-                waiting = false;
             }
             else
             {
-                MessageText.text = "請沿著軌道方向旋轉身體直到終點";
-            }
+                // change color if collided
+                if (Track != null)
+                {
+                    if (hitTrack)
+                    {
+                        Track.startColor = triggerColor;
+                        Track.endColor = triggerColor;
+                        hitTrack = false;
+                    }
+                    else
+                    {
+                        Track.startColor = lineColor;
+                        Track.endColor = lineColor;
+                    }
+                }
 
+                // timer countdown
+                if (waiting)
+                {
+                    int seconds = Mathf.FloorToInt(TimeRemain % 60);
+                    if (seconds < 0) seconds = 0;
+                    MessageText.text = "請維持此姿勢\n還剩" + seconds + "秒";
+
+                    // end test
+                    if (TimeRemain > 0)
+                    {
+                        TimeRemain -= Time.deltaTime;
+                    }
+                    else
+                    {
+                        Track.startColor = endColor;
+                        Track.endColor = endColor;
+
+                        EndArea.transform.position = new Vector3(0, 20, 0);
+
+                        testing = false;
+                        ready = false;
+                        Status = "not-testing";
+
+                        TimeRemain = 5f;
+                        _emg_logger.end_logging();
+                    }
+
+                    waiting = false;
+                }
+                else
+                {
+                    MessageText.text = "請沿著軌道方向旋轉身體直到終點";
+                }    
+            }
+            
             DataRecorder();
         }
-
     }
 
     public void CreateNewTrack(float rotationAngle, float viewingRange)
@@ -441,17 +448,17 @@ public class Manager2 : MonoBehaviour
         {
             Timer = Interval;
 
-            float r = EtoDirection(TaskList[count - 1].direction);
-            float v = EtoMaxViewingRange(TaskList[count - 1].direction) * EtoRange(TaskList[count - 1].percentage);
-            float t = Time.time;
-            float h = Vector3.Angle(HeadStartVector, Camera.main.transform.forward);
-            float g = 0f;
-            float sh = Vector3.Angle(ShoulderStartVector, ShoulderAnchor.transform.forward);
+            t = Time.time;
+            ForwardToSpherical(Camera.main.transform.forward, out hPolar, out hAzimuth);
+            ForwardToSpherical(ShoulderAnchor.transform.forward, out sPolar, out sAzimuth);
+            ForwardToSpherical(LeftEye.transform.forward, out lgPolar, out lgAzimuth);
+            ForwardToSpherical(RightEye.transform.forward, out rgPolar, out rgAzimuth);
 
-            string Data = ParticipantID.ToString() + ',' + Posture.ToString() + ',' +
-            r.ToString() + ',' + TaskList[count - 1].percentage.ToString() + "," + v.ToString() + "," + t.ToString() + "," +
-            h.ToString() + ',' + g.ToString() + ',' + sh.ToString();
-
+            string Data = t.ToString() + "," + Status + ","
+                + hPolar.ToString() + "," + hAzimuth.ToString() + ","
+                + sPolar.ToString() + "," + sAzimuth.ToString() + ","
+                + lgPolar.ToString() + "," + lgAzimuth.ToString() + ","
+                + rgPolar.ToString() + "," + rgAzimuth.ToString();
             sw.WriteLine(Data);
 
         }
@@ -459,5 +466,15 @@ public class Manager2 : MonoBehaviour
         {
             Timer -= Time.deltaTime;
         }
+    }
+
+    public static void ForwardToSpherical(Vector3 cartCoords, out float outPolar, out float outAzimuth){
+        // Radius is 1
+        if (cartCoords.z == 0)
+            cartCoords.z = Mathf.Epsilon;
+        outPolar = Mathf.Atan(cartCoords.x / cartCoords.z) * Mathf.Rad2Deg;
+        if (cartCoords.z < 0)
+            outPolar += Mathf.PI;
+        outAzimuth = Mathf.Asin(cartCoords.y / 1) * Mathf.Rad2Deg;
     }
 }
