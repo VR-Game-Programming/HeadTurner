@@ -345,7 +345,7 @@ public class Manager2 : MonoBehaviour
                     // timer countdown
                     if (waiting)
                     {
-                        int seconds = Mathf.FloorToInt(TimeRemain % 60);
+                        int seconds = Mathf.FloorToInt(TimeRemain % 60) + 1;
                         if (seconds < 0) seconds = 0;
                         MessageText.text = "請維持此姿勢\n還剩" + seconds + "秒";
 
