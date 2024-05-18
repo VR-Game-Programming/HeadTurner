@@ -29,11 +29,18 @@ posture
 
 **output:**  
 `Formative_O1_[Participant]_[Posture].csv`  
-| Participant | Posture | Direction | RangePercentage | ViewingRange | time | HeadRotationAngle | GazingAngle | ShoulderRotationAngle | 
-| - | - | - | - | - | - | - | - | - |
-| 1 |	Standing |	180	 | P100 |	100 |	11.76902 | 2.118864	| 0 | 1.229397 |
 
-time: seconds from test starting
+- `time`: 從測試開始經過的時間 unit=seconds
+- `Status`: 當前狀態，`non-testing` or `Direction A / Range B`
+> 以下角度的計算方式為:  
+> `object.transform.forward` 為從 (0, 0, 0) 為起點，方向為目前 object 面朝方向的單位向量  
+> 將該向量的終點的 (x, y, z) 換算成以 z軸為正前方、x軸為正左方、y軸為正上方 的球座標 (radius, polar, azimuth)  
+> [球座標解釋](https://zh.wikipedia.org/zh-tw/%E7%90%83%E5%BA%A7%E6%A8%99%E7%B3%BB)  
+
+- 頭部(頭盔): `HeadPolar`, `HeadAzimuth`
+- 肩膀: `ShoulderPolar`, `ShoulderAzimuth`
+- 左眼視線: `LeftGazePolar`, `LeftGazeAzimuth`
+- 右眼視線: `RightGazePolar`, `RightGazeAzimuth`
 
 ---
 
