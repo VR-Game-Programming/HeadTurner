@@ -111,8 +111,12 @@ public class Manager2 : MonoBehaviour
     public GameObject RightEye;
     public GameObject Message;
     private TextMeshProUGUI MessageText;
+    public GameObject Cam;
+    public GameObject Viewport;
+    private Quaternion StartRotation;
 
     // Game Control
+    private bool redirect = false;
     private bool ready = false; // if is ready to start new task (enter start area)
     private bool waiting = false; // if is ready to waiting(enter end area)
     private float TimeRemain = 5f;
@@ -220,7 +224,7 @@ public class Manager2 : MonoBehaviour
     void Start()
     {
         MessageText = Message.GetComponent<TextMeshProUGUI>();
-        MessageText.text = "";
+        MessageText.text = "按下 [A] 鍵來重新定向";
 
         EndArea.transform.position = new Vector3(0, 20, 0);
         EndArea.GetComponent<Renderer>().enabled = false;
@@ -274,105 +278,117 @@ public class Manager2 : MonoBehaviour
 
     void Update()
     {
-        if (endtests) {
-            sw.Close();
-            fs.Close();
-            return;
-        }
-        else{
-            if (!testing)
-            {
-                if (count >= TaskList.Count)
+        if (redirect) {
+            if (endtests) {
+                sw.Close();
+                fs.Close();
+                return;
+            }
+            else{
+                if (!testing)
                 {
-                    endtests = true;
-                    MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
-                    sw.Close();
-                    fs.Close();
-
-                    _emg_logger.close();
-                }
-                else
-                {
-                    if (ready)
+                    if (count >= TaskList.Count)
                     {
-                        MessageText.text = "按下 [A] 鍵來開始新測試";
-                        // start new test
-                        if (OVRInput.GetDown(OVRInput.Button.One))
+                        endtests = true;
+                        MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
+                        sw.Close();
+                        fs.Close();
+
+                        _emg_logger.close();
+                    }
+                    else
+                    {
+                        if (ready)
                         {
-                            float rotationAngle = EtoDirection(TaskList[count].direction);
-                            float viewingRange = EtoMaxViewingRange(TaskList[count].direction) * EtoRange(TaskList[count].percentage);
+                            MessageText.text = "按下 [A] 鍵來開始新測試";
+                            // start new test
+                            if (OVRInput.GetDown(OVRInput.Button.One))
+                            {
+                                float rotationAngle = EtoDirection(TaskList[count].direction);
+                                float viewingRange = EtoMaxViewingRange(TaskList[count].direction) * EtoRange(TaskList[count].percentage);
 
-                            CreateNewTrack(rotationAngle, viewingRange);
-                            Status = "Direction " + rotationAngle.ToString() + " / Range " + TaskList[count].percentage.ToString();
+                                CreateNewTrack(rotationAngle, viewingRange);
+                                Status = "Direction " + rotationAngle.ToString() + " / Range " + TaskList[count].percentage.ToString();
 
-                            MessageText.text = "請沿著軌道方向旋轉身體直到終點";
+                                MessageText.text = "請沿著軌道方向旋轉身體直到終點";
 
-                            count++;
-                            testing = true;
-                            _emg_logger.start_logging(viewingRange.ToString(), Posture.ToString());
+                                count++;
+                                testing = true;
+                                _emg_logger.start_logging(viewingRange.ToString(), Posture.ToString());
+                            }
+                            ready = false;
                         }
-                        ready = false;
+                        else
+                        {
+                            MessageText.text = "請回到起始區域";
+                        }
                     }
-                    else
-                    {
-                        MessageText.text = "請回到起始區域";
-                    }
-                }
-            }
-            else
-            {
-                // change color if collided
-                if (Track != null)
-                {
-                    if (hitTrack)
-                    {
-                        Track.startColor = triggerColor;
-                        Track.endColor = triggerColor;
-                        hitTrack = false;
-                    }
-                    else
-                    {
-                        Track.startColor = lineColor;
-                        Track.endColor = lineColor;
-                    }
-                }
-
-                // timer countdown
-                if (waiting)
-                {
-                    int seconds = Mathf.FloorToInt(TimeRemain % 60);
-                    if (seconds < 0) seconds = 0;
-                    MessageText.text = "請維持此姿勢\n還剩" + seconds + "秒";
-
-                    // end test
-                    if (TimeRemain > 0)
-                    {
-                        TimeRemain -= Time.deltaTime;
-                    }
-                    else
-                    {
-                        Track.startColor = endColor;
-                        Track.endColor = endColor;
-
-                        EndArea.transform.position = new Vector3(0, 20, 0);
-
-                        testing = false;
-                        ready = false;
-                        Status = "not-testing";
-
-                        TimeRemain = 5f;
-                        _emg_logger.end_logging();
-                    }
-
-                    waiting = false;
                 }
                 else
                 {
-                    MessageText.text = "請沿著軌道方向旋轉身體直到終點";
-                }    
+                    // change color if collided
+                    if (Track != null)
+                    {
+                        if (hitTrack)
+                        {
+                            Track.startColor = triggerColor;
+                            Track.endColor = triggerColor;
+                            hitTrack = false;
+                        }
+                        else
+                        {
+                            Track.startColor = lineColor;
+                            Track.endColor = lineColor;
+                        }
+                    }
+
+                    // timer countdown
+                    if (waiting)
+                    {
+                        int seconds = Mathf.FloorToInt(TimeRemain % 60);
+                        if (seconds < 0) seconds = 0;
+                        MessageText.text = "請維持此姿勢\n還剩" + seconds + "秒";
+
+                        // end test
+                        if (TimeRemain > 0)
+                        {
+                            TimeRemain -= Time.deltaTime;
+                        }
+                        else
+                        {
+                            Track.startColor = endColor;
+                            Track.endColor = endColor;
+
+                            EndArea.transform.position = new Vector3(0, 20, 0);
+
+                            testing = false;
+                            ready = false;
+                            Status = "not-testing";
+
+                            TimeRemain = 5f;
+                            _emg_logger.end_logging();
+                        }
+
+                        waiting = false;
+                    }
+                    else
+                    {
+                        MessageText.text = "請沿著軌道方向旋轉身體直到終點";
+                    }    
+                }
+                
+                DataRecorder();
             }
-            
-            DataRecorder();
+        }
+        else
+        {
+            if (OVRInput.GetDown(OVRInput.Button.One))
+            {
+                StartRotation = Cam.transform.rotation;
+                Debug.Log("Start Rotation: " + StartRotation.eulerAngles.ToString());
+                Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
+                redirect = true;
+            }
         }
     }
 
@@ -399,7 +415,7 @@ public class Manager2 : MonoBehaviour
             float x = Mathf.Sin(Mathf.Deg2Rad * currentAngle) * radius;
             float z = Mathf.Cos(Mathf.Deg2Rad * currentAngle) * radius;
 
-            Vector3 rotatedPoint = Quaternion.Euler(0, 0, rotationAngle) * new Vector3(x, 0, z);
+            Vector3 rotatedPoint = StartRotation * Quaternion.Euler(0, 0, rotationAngle) * new Vector3(x, 0, z);
 
             Track.SetPosition(i, rotatedPoint);
 
