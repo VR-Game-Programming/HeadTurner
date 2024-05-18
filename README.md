@@ -6,30 +6,30 @@ Unity Source Code for HeadTurner (CHI 2025)
 
 ## Formative Study
 ### Task1
-每一名受試者的每個姿勢執行一次  
-**input:**  
-participant's ID  
-posture  
-8 directions
+**執行次數**: 每一名受試者的每個姿勢執行一次  
+**input**: 請將以下參數輸入 Manager1 的 inspector    
+- `participant ID`:要測試的受試者
+- `posture`: 要測試的姿勢
+- `8 directions`: 要測試的 8 個方向
 
-**output:**  
-`Formative_T1_[Participant]_[Posture].csv`  
-| Participant | Posture | Direction | MaxViewingRange |
-| - | - | - | - |
-| 1 | Standing | 180 | 90 |
+**output**:  
+`Formative_T1_[Participant]_[Posture].csv`
+- `Participant`: 受測的受試者
+- `Posture`: 受測的姿勢
+- `Direction`: 受測的方向
+- `MaxViewingRange`: 受測方向上的 MaxViewingRange
 
 ---
 
 ### Task2 (Observation1)
-每一名受試者的每個姿勢執行八次 (四個測試跑一次)  
-**input:**  
-participant's ID  
-posture  
-4 direction-range pairs
+**執行次數**: 每一名受試者的每個姿勢執行八次 (四個測試跑一次)  
+**input**:  
+- `participant ID`:要測試的受試者
+- `posture`: 要測試的姿勢
+- `4 direction-range pairs`: 要測試的 4 個方向-範圍
 
 **output:**  
 `Formative_O1_[Participant]_[Posture].csv`  
-
 - `time`: 從測試開始經過的時間 unit=seconds
 - `Status`: 當前狀態，`non-testing` or `Direction A / Range B`
 > 以下角度的計算方式為:  
