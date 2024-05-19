@@ -170,6 +170,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1438233528319916599, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+      propertyPath: DrawMarkers
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1438233528319916600, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.1
@@ -497,16 +501,16 @@ MonoBehaviour:
   Message: {fileID: 1190142452}
   Cam: {fileID: 1362468608}
   Viewport: {fileID: 110278254}
-  ParticipantID: 1
-  Posture: 1
+  ParticipantID: 2
+  Posture: 0
   TaskList:
-  - direction: 1
-    percentage: 1
-  - direction: 2
-    percentage: 2
+  - direction: 3
+    percentage: 0
   - direction: 5
     percentage: 1
-  - direction: 6
+  - direction: 5
+    percentage: 2
+  - direction: 2
     percentage: 0
   Folder: Result
 --- !u!1 &719863599 stripped
