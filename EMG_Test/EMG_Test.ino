@@ -5,7 +5,7 @@ int emg_pins[4] = {A0, A1, A2, A3};
 unsigned long myTime;
 
 // get analog value
-int getAnalog(int pin, int repeat=32)
+int getAnalog(int pin, int repeat=1)
 {
     long sum = 0;
     for(int i=0; i<repeat; i++)
