@@ -55,8 +55,11 @@ public class HeadControl : MonoBehaviour
             error = Vector3.SignedAngle(headAnchor.forward, neutralViewingDirection, yawAxis);
             // The yawing range is (0,0) and (1,1), the neutral position is (0.5,0.5)
             // The error is normalized to the range (-0.5,0.5), then shifted to the range (0,1)
-            Debug.Log(error);
-            float targetAngle = (error / 180f + 0.5f);
+            // targetAngle is mapped from the error of (-90,90) to (0,1)
+            Debug.Log(error); // -180 ~ +180
+            float targetAngle = (error / 90 + 0.5f);
+            // Clamp the angle between 0 an 1
+            targetAngle = Mathf.Clamp(targetAngle, 0, 1);
             // Now the problem is that we don't want the angle to change too fast
 
             // Set the yaw angle of the motors
