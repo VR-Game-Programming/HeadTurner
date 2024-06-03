@@ -1,6 +1,0 @@
-{
-    "port": "COM5",
-    "board": "arduino:avr:uno",
-    "programmer": "arduinoasisp",
-    "sketch": "EMG_Test\\EMG_Test.ino"
-}
