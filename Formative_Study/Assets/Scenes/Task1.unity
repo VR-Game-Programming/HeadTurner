@@ -262,19 +262,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   Message: {fileID: 1190142452}
-<<<<<<< HEAD:Formative_Study/Assets/Scene/Task1.unity
+  Cam: {fileID: 346039555}
+  Viewport: {fileID: 1542296453}
   ParticipantID: 3
   Posture: 0
   MaterialsFolder: Materials
   ResultFolder: Result
-=======
-  Cam: {fileID: 1258476690}
-  Viewport: {fileID: 1542296453}
-  ParticipantID: 2
-  Posture: 0
-  DirectionList: 0100000004000000020000000500000006000000000000000300000007000000
-  Folder: Result
->>>>>>> 723294b892e60868e5473a2a62137807be2ba9c8:Formative_Study/Assets/Scenes/Task1.unity
 --- !u!4 &336128671
 Transform:
   m_ObjectHideFlags: 0
@@ -290,6 +283,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &346039555 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7079690332722255715, guid: c89b2c4e711f8a14ba3df7e4b3c71f12, type: 3}
+  m_PrefabInstance: {fileID: 2112885852}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &750297139
 GameObject:
   m_ObjectHideFlags: 0
@@ -570,8 +568,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u6309\u4E0B [A] \u9375\u4F86\u958B\u59CB\u65B0\u6E2C\u8A66"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 247d365f703dad34498664b9d9856abb, type: 2}
-  m_sharedMaterial: {fileID: 5426784279658316115, guid: 247d365f703dad34498664b9d9856abb, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e8a01625960a5854f938b3d6a4098f7f, type: 2}
+  m_sharedMaterial: {fileID: -848680270599597634, guid: e8a01625960a5854f938b3d6a4098f7f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -758,11 +756,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &1258476690 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7079690332722255717, guid: c89b2c4e711f8a14ba3df7e4b3c71f12, type: 3}
-  m_PrefabInstance: {fileID: 2112885852}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1291783563
 GameObject:
   m_ObjectHideFlags: 0

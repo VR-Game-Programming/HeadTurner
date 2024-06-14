@@ -500,40 +500,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   EndArea: {fileID: 1094073262}
-<<<<<<< HEAD:Formative_Study/Assets/Scene/Task2.unity
   enableTrunk: 0
   TrunkAnchor: {fileID: 27786284}
   Message: {fileID: 1190142452}
+  Cam: {fileID: 1352350980}
+  Viewport: {fileID: 110278254}
   ParticipantID: 10
   Posture: 2
   Interval: 0.02
   MaterialsFolder: Materials
   ResultFolder: Result
-=======
-  ShoulderAnchor: {fileID: 719863599}
-  LeftEye: {fileID: 1085113409}
-  RightEye: {fileID: 1114683125}
-  Message: {fileID: 1190142452}
-  Cam: {fileID: 1362468608}
-  Viewport: {fileID: 110278254}
-  ParticipantID: 2
-  Posture: 0
-  TaskList:
-  - direction: 3
-    percentage: 0
-  - direction: 5
-    percentage: 1
-  - direction: 5
-    percentage: 2
-  - direction: 2
-    percentage: 0
-  Folder: Result
---- !u!1 &719863599 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2452106846824428253, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-  m_PrefabInstance: {fileID: 27786283}
-  m_PrefabAsset: {fileID: 0}
->>>>>>> 723294b892e60868e5473a2a62137807be2ba9c8:Formative_Study/Assets/Scenes/Task2.unity
 --- !u!1 &750297139
 GameObject:
   m_ObjectHideFlags: 0
@@ -774,11 +750,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2112885853}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1085113409 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 381618635065875269, guid: cd20efabdb0a60745a5015c0d733df31, type: 3}
-  m_PrefabInstance: {fileID: 1237765488}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1085113411 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4494553733232339608, guid: cd20efabdb0a60745a5015c0d733df31, type: 3}
@@ -889,11 +860,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 110278255}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1114683125 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 381618635065875269, guid: cd20efabdb0a60745a5015c0d733df31, type: 3}
-  m_PrefabInstance: {fileID: 154902395}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1114683127 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4494553733232339608, guid: cd20efabdb0a60745a5015c0d733df31, type: 3}
@@ -939,8 +905,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u6309\u4E0B [A] \u9375\u4F86\u958B\u59CB\u65B0\u6E2C\u8A66"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 247d365f703dad34498664b9d9856abb, type: 2}
-  m_sharedMaterial: {fileID: 5426784279658316115, guid: 247d365f703dad34498664b9d9856abb, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e8a01625960a5854f938b3d6a4098f7f, type: 2}
+  m_sharedMaterial: {fileID: -848680270599597634, guid: e8a01625960a5854f938b3d6a4098f7f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1236,9 +1202,9 @@ Transform:
   - {fileID: 1531306169}
   m_Father: {fileID: 2112885855}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1362468608 stripped
+--- !u!1 &1352350980 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 7079690332722255717, guid: c89b2c4e711f8a14ba3df7e4b3c71f12, type: 3}
+  m_CorrespondingSourceObject: {fileID: 7079690332722255715, guid: c89b2c4e711f8a14ba3df7e4b3c71f12, type: 3}
   m_PrefabInstance: {fileID: 2112885852}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1531306168
