@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.WebSockets;
 using Meta.WitAi.Data.Entities;
 using TMPro;
 using Unity.VisualScripting;
@@ -18,7 +20,6 @@ public class Manager1 : MonoBehaviour
     private Color triggerColor = new Color(0.2f, 0.9f, 0.2f, 0.8f);
     private Color endColor = new Color(0.9f, 0.1f, 0.1f, 0.8f);
     public Material lineMaterial;
-
     private MeshCollider Collider;
     private bool hitTrack = false;
 
@@ -33,43 +34,21 @@ public class Manager1 : MonoBehaviour
     private bool endtests = false;
 
     // Data Setting
-    public enum PostureE { Standing, Sitting, Reclining, Lying }
-    public enum DirectionE { D0, D45, D90, D135, D180, D225, D270, D315 }
-    public float EtoDirection(DirectionE d) {
-        switch (d) {
-            case DirectionE.D0:
-                return 0f;
-            case DirectionE.D45:
-                return 45f;
-            case DirectionE.D90:
-                return 90f;
-            case DirectionE.D135:
-                return 135f;
-            case DirectionE.D180:
-                return 180f;
-            case DirectionE.D225:
-                return 225f;
-            case DirectionE.D270:
-                return 270f;
-            case DirectionE.D315:
-                return 315f;
-            default:
-                return 0f;
-        }
-    }
+    public enum PostureE { Standing, Sitting, Lying }
 
-    [Header("Task Data")]
+    [Header("Task Setting")]
     public int ParticipantID = 0;
     public PostureE Posture = PostureE.Standing;
-    public List<DirectionE> DirectionList = new();
+    private List<int> DirectionList = new();
 
     // Data Recording
     private Vector3 StartVector;
-    private Vector3 EndVector;
     private float MaxViewingRange;
 
-    [Header("Saving Path")]
-    public string Folder = @"";
+    // CSV File Setting
+    [Header("File Setting")]
+    public string MaterialsFolder = @"Materials";
+    public string ResultFolder = @"Result";
     private string FullPath = "";
     private FileStream fs;
     private StreamWriter sw;
@@ -79,8 +58,29 @@ public class Manager1 : MonoBehaviour
         MessageText = Message.GetComponent<TextMeshProUGUI>();
         MessageText.text = "";
 
-        // Setting CSV File
-        FullPath = Path.Combine(Folder, "Formative_T1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
+        // Reading Task Order
+        FullPath = Path.Combine(MaterialsFolder, "Formative_T1_Order.csv");
+        if (File.Exists(FullPath)) {
+            using (var reader = new StreamReader(FullPath)) {
+                reader.ReadLine(); // skip header
+                while (!reader.EndOfStream) {
+                    var line = reader.ReadLine();
+                    var values = line.Split(',');
+
+                    int participants = int.Parse(values[0]);
+                    string posture = values[1];
+
+                    if(participants == ParticipantID && posture == Posture.ToString()) {
+                        for (int i = 2; i < values.Length; i++) {
+                            DirectionList.Add(int.Parse(values[i]));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Setting Result File
+        FullPath = Path.Combine(ResultFolder, "Formative_T1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
         fs = new FileStream(FullPath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
         string Header = "Participant" + ',' + "Posture" + ',' + "Direction" + ',' + "MaxViewingRange";
@@ -93,6 +93,8 @@ public class Manager1 : MonoBehaviour
                 if (count >= DirectionList.Count) {
                     endtests = true;
                     MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
+                    sw.Close();
+                    fs.Close();
                 }
                 else {
                     if (!ready) {
@@ -101,7 +103,7 @@ public class Manager1 : MonoBehaviour
                         MessageText.text = "按下 [A] 鍵來開始新測試";
                         // start new test
                         if (OVRInput.GetDown(OVRInput.Button.One)) {
-                            CreateNewTrack(EtoDirection(DirectionList[count]), 180);
+                            CreateNewTrack(DirectionList[count], 180);
                             MessageText.text = "請沿著軌道方向旋轉身體到最大距離\n按下 [A] 鍵來結束測試";
 
                             StartVector = Camera.main.transform.forward;
@@ -133,11 +135,12 @@ public class Manager1 : MonoBehaviour
                     testing = false;
                     ready = false;
 
-                    EndVector = Camera.main.transform.forward;
+                    Vector3 EndVector = Camera.main.transform.forward;
                     MaxViewingRange = Vector3.Angle(StartVector, EndVector);
 
                     string NewLine = ParticipantID.ToString() + ',' + Posture.ToString() + ','
-                    + EtoDirection(DirectionList[count-1]).ToString() + ',' + MaxViewingRange.ToString();
+                    + DirectionList[count-1].ToString() + ',' + MaxViewingRange.ToString();
+
                     sw.WriteLine(NewLine);
                 }
             }
