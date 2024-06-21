@@ -23,7 +23,7 @@ public class EMGLogger_O
     public enum Status { Start, Waiting, Back, End }
 
 
-    public EMGLogger_O(string portName = "COM4", int baudRate = 9600, string dirname = "Result")
+    public EMGLogger_O(string portName = "COM4", int baudRate = 115200, string dirname = "Result")
     {
         _serialPort = new SerialPort(portName, baudRate);
         _serialPort.Open();
@@ -193,8 +193,8 @@ public class Manager2 : MonoBehaviour
         sw.WriteLine(Header);
 
         // Emg
-        // string emg_folder = Path.Combine(ResultFolder, "emg_data", "Formative_O3_P" + ParticipantID.ToString());
-        // _emg_logger = new EMGLogger_O(dirname: emg_folder);
+        string emg_folder = Path.Combine(ResultFolder, "emg_data", "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString());
+        _emg_logger = new EMGLogger_O(dirname: emg_folder);
     }
 
     void Update()
@@ -205,15 +205,15 @@ public class Manager2 : MonoBehaviour
                     if (count >= DirectionList.Count) {
                         endtests = true;
                         MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
-                        // _emg_logger.close();
+                        _emg_logger.close();
                         sw.Close();
                         fs.Close();
                     }
                     else {
                         if (rest) {
-                            MessageText.text = "休息時間，請通知實驗人員\n按下 [A] 鍵來繼續測試";
+                            MessageText.text = "休息時間，請通知實驗人員\n按下 [B] 鍵來繼續測試";
 
-                            if (OVRInput.GetDown(OVRInput.Button.One)) {
+                            if (OVRInput.GetDown(OVRInput.Button.Two)) {
                                 rest = false;
                             }
                         }
@@ -235,7 +235,7 @@ public class Manager2 : MonoBehaviour
                                     HeadStartVector = Camera.main.transform.forward;
                                     if (enableTrunk){ TrunkStartVector = TrunkAnchor.transform.forward; }
 
-                                    // _emg_logger.start_logging(rotationAngle.ToString(), Posture.ToString());
+                                    _emg_logger.start_logging(rotationAngle.ToString(), Posture.ToString());
                                 }
                                 ready = false;
                                 hitEnd = false;
@@ -279,7 +279,7 @@ public class Manager2 : MonoBehaviour
                         hitEnd = false;
                     }
 
-                    // _emg_logger.end_logging();
+                    _emg_logger.end_logging();
                     DataRecorder();
                 }
             }
@@ -363,6 +363,7 @@ public class Manager2 : MonoBehaviour
     {
         sw.Close();
         fs.Close();
+        _emg_logger.close();
     }
 
     public void DataRecorder()

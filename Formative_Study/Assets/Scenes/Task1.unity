@@ -200,6 +200,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   Manager: {fileID: 336128669}
+--- !u!1 &278696263 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7079690332722255717, guid: c89b2c4e711f8a14ba3df7e4b3c71f12, type: 3}
+  m_PrefabInstance: {fileID: 2112885852}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &298211072
 GameObject:
   m_ObjectHideFlags: 0
@@ -262,10 +267,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   Message: {fileID: 1190142452}
-  Cam: {fileID: 346039555}
+  Cam: {fileID: 278696263}
   Viewport: {fileID: 1542296453}
-  ParticipantID: 3
-  Posture: 0
+  ParticipantID: 1
+  Posture: 2
   MaterialsFolder: Materials
   ResultFolder: Result
 --- !u!4 &336128671
@@ -283,11 +288,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &346039555 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7079690332722255715, guid: c89b2c4e711f8a14ba3df7e4b3c71f12, type: 3}
-  m_PrefabInstance: {fileID: 2112885852}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &750297139
 GameObject:
   m_ObjectHideFlags: 0
