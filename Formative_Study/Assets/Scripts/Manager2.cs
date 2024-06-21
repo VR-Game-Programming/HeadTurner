@@ -127,9 +127,13 @@ public class Manager2 : MonoBehaviour
     public enum PostureE { Standing, Sitting, Lying }
     public Dictionary<int, int> RangeDict = new(){
         {0, 55},
+        {45, 45},
         {90, 35},
+        {135, 45},
         {180, 55},
+        {225, 45},
         {270, 35},
+        {315, 45},
     };
 
     [Header("Task Setting")]
@@ -204,14 +208,14 @@ public class Manager2 : MonoBehaviour
                 if (!testing) {
                     if (count >= DirectionList.Count) {
                         endtests = true;
-                        MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
+                        MessageText.text = "全部方向皆測試完成，請通知實驗人員並回答問卷\n請還不要拿下頭盔";
                         _emg_logger.close();
                         sw.Close();
                         fs.Close();
                     }
                     else {
                         if (rest) {
-                            MessageText.text = "休息時間，請通知實驗人員\n按下 [B] 鍵來繼續測試";
+                            MessageText.text = "此方向測試完成，請通知實驗人員並回答問卷\n還有下一項測試，請還不要拿下頭盔";
 
                             if (OVRInput.GetDown(OVRInput.Button.Two)) {
                                 rest = false;

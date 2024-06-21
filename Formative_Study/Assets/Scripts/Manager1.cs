@@ -5,84 +5,6 @@ using UnityEngine;
 using System.IO.Ports;
 using System.Threading;
 
-public class EMGLogger_T
-{
-    private SerialPort _serialPort;
-    private StreamWriter _dataWriter;
-    private StreamWriter _timestampWriter;
-    private Thread _thread;
-    private bool _startLogging;
-    private bool _endLogging;
-    private bool _running=true;
-    private string _cur_angle;
-    private string _cur_posture;
-    private string _cur_start_time;
-
-
-    public EMGLogger_T(string portName = "COM4", int baudRate = 9600, string dirname = "Result")
-    {
-        _serialPort = new SerialPort(portName, baudRate);
-        _serialPort.Open();
-
-        Directory.CreateDirectory(dirname);
-        string data_path = Path.Combine(dirname, "emgdata");
-        string timestamp_path = Path.Combine(dirname, "timestamp.csv");
-
-        _dataWriter = new StreamWriter(data_path);
-        _timestampWriter = new StreamWriter(timestamp_path);
-        string header = "angle,posture,start_time,end_time,";
-        _timestampWriter.WriteLine(header);
-
-        _thread = new Thread(ReadSerialPort);
-        _thread.Start();
-    }
-
-    private void ReadSerialPort()
-    {
-        while (_running)
-        {
-            string data = _serialPort.ReadLine();
-            _dataWriter.WriteLine(data);
-            if (_startLogging)
-            {
-                string timestamp = data.Split(',')[0];
-                _cur_start_time = timestamp;
-                _startLogging = false;
-            }
-            if (_endLogging)
-            {
-                string end_time = data.Split(',')[0];
-                data = _cur_angle + ","
-                    + _cur_posture + ","
-                    + _cur_start_time + ","
-                    + end_time + ",";
-                _timestampWriter.WriteLine(data);
-                _endLogging = false;
-            }
-        }
-    }
-
-    public void start_logging(string angle, string posture)
-    {
-        _startLogging = true;
-        _cur_angle = angle;
-        _cur_posture = posture;
-    }
-
-    public void end_logging()
-    {
-        _endLogging = true;
-    }
-
-    public void close()
-    {
-        while(_endLogging);
-        _running = false;
-        _dataWriter.Close();
-        _timestampWriter.Close();
-    }
-}
-
 public class Manager1 : MonoBehaviour
 {
     private LineRenderer Track;
@@ -106,6 +28,7 @@ public class Manager1 : MonoBehaviour
     // Game Control
     private bool redirect = false;
     private bool ready = false;
+    private int tcount = 0;
     private int count = 0;
     private bool testing = false;
     private bool endtests = false;
@@ -129,10 +52,6 @@ public class Manager1 : MonoBehaviour
     private string FullPath = "";
     private FileStream fs;
     private StreamWriter sw;
-
-    // Emg
-    private EMGLogger_T emg_logger;
-
 
     void Start()
     {
@@ -164,13 +83,8 @@ public class Manager1 : MonoBehaviour
         FullPath = Path.Combine(ResultFolder, "Formative_T1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
         fs = new FileStream(FullPath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
-        string Header = "Participant,Posture,Direction,MaxViewingRange";
+        string Header = "Participant,Posture,tcount,Direction,MaxViewingRange";
         sw.WriteLine(Header);
-
-        // EMG Logger
-        // Debug.Log("load emg object");
-        // string emg_folder = Path.Combine(ResultFolder, "emg_data", "Formative_T1_P" + ParticipantID.ToString()+ "_" + Posture.ToString() + ".csv");
-        // emg_logger = new EMGLogger_T(dirname: emg_folder);
     }
 
     void Update()
@@ -182,7 +96,6 @@ public class Manager1 : MonoBehaviour
                         endtests = true;
                         MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
 
-                        // emg_logger.close();
                         sw.Close();
                         fs.Close();
                     }
@@ -199,9 +112,8 @@ public class Manager1 : MonoBehaviour
                                 MessageText.text = "請沿著軌道方向旋轉身體到最大距離\n按下 [A] 鍵來結束測試";
 
                                 StartVector = Camera.main.transform.forward;
-                                // emg_logger.start_logging(rotationAngle.ToString(), Posture.ToString());
-
-                                count ++;
+                                
+                                tcount ++;
                                 testing = true;
                             }
                             ready = false;
@@ -231,12 +143,17 @@ public class Manager1 : MonoBehaviour
                         Vector3 EndVector = Camera.main.transform.forward;
                         MaxViewingRange = Vector3.Angle(StartVector, EndVector);
 
-                        string NewLine = ParticipantID.ToString() + ',' + Posture.ToString() + ','
-                        + DirectionList[count-1].ToString() + ',' + MaxViewingRange.ToString();
+                        string NewLine = ParticipantID.ToString() + ',' + Posture.ToString() + ',' + tcount.ToString() + ','
+                        + DirectionList[count].ToString() + ',' + MaxViewingRange.ToString();
 
                         sw.WriteLine(NewLine);
 
-                        // emg_logger.end_logging();
+                        Debug.Log("tcount: " + tcount.ToString() + " count: " + count.ToString());
+
+                        if (tcount >= 3) {
+                            tcount = 0;
+                            count ++;
+                        }
                     }
                 }
             }
