@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
-
 using System.IO.Ports;
 using System.Threading;
 using System;
@@ -24,7 +23,7 @@ public class EMGLogger_O
     public enum Status { Start, Waiting, Back, End }
 
 
-    public EMGLogger_O(string portName = "COM4", int baudRate = 9600, string dirname = "Result")
+    public EMGLogger_O(string portName = "COM4", int baudRate = 115200, string dirname = "Result")
     {
         _serialPort = new SerialPort(portName, baudRate);
         _serialPort.Open();
@@ -106,9 +105,8 @@ public class Manager2 : MonoBehaviour
 
     // Objects
     public GameObject EndArea;
-    public GameObject ShoulderAnchor;
-    public GameObject LeftEye;
-    public GameObject RightEye;
+    public bool enableTrunk = false;
+    public GameObject TrunkAnchor;
     public GameObject Message;
     private TextMeshProUGUI MessageText;
     public GameObject Cam;
@@ -118,106 +116,47 @@ public class Manager2 : MonoBehaviour
     // Game Control
     private bool redirect = false;
     private bool ready = false; // if is ready to start new task (enter start area)
-    private bool waiting = false; // if is ready to waiting(enter end area)
-    private float TimeRemain = 5f;
-    private int count = 0;
+    private int tcount = 0; // task countdown
+    private int count = 0; // total count
+    private bool hitEnd = false; // if task is done
+    private bool rest = false; // if is resting
     private bool testing = false; // if task is running
     private bool endtests = false; // if all tasks are done
 
     // Data Setting
-    public enum PostureE { Standing, Sitting, Reclining, Lying }
-    public enum RangePercentageE { P25, P50, P75, P100 }
-    public float EtoRange(RangePercentageE r)
-    {
-        switch (r)
-        {
-            case RangePercentageE.P25:
-                return 0.25f;
-            case RangePercentageE.P50:
-                return 0.50f;
-            case RangePercentageE.P75:
-                return 0.75f;
-            case RangePercentageE.P100:
-                return 1f;
-            default:
-                return 0f;
-        }
-    }
-    public enum DirectionE { D0, D45, D90, D135, D180, D225, D270, D315 }
-    public float EtoDirection(DirectionE d)
-    {
-        switch (d)
-        {
-            case DirectionE.D0:
-                return 0f;
-            case DirectionE.D45:
-                return 45f;
-            case DirectionE.D90:
-                return 90f;
-            case DirectionE.D135:
-                return 135f;
-            case DirectionE.D180:
-                return 180f;
-            case DirectionE.D225:
-                return 225f;
-            case DirectionE.D270:
-                return 270f;
-            case DirectionE.D315:
-                return 315f;
-            default:
-                return 0f;
-        }
-    }
-    public float EtoMaxViewingRange(DirectionE d)
-    {
-        switch (d)
-        {
-            case DirectionE.D0:
-                return MaxViewingRange[0];
-            case DirectionE.D45:
-                return MaxViewingRange[1];
-            case DirectionE.D90:
-                return MaxViewingRange[2];
-            case DirectionE.D135:
-                return MaxViewingRange[3];
-            case DirectionE.D180:
-                return MaxViewingRange[4];
-            case DirectionE.D225:
-                return MaxViewingRange[5];
-            case DirectionE.D270:
-                return MaxViewingRange[6];
-            case DirectionE.D315:
-                return MaxViewingRange[7];
-            default:
-                return 0f;
-        }
-    }
-    private float[] MaxViewingRange = new float[8] { 90f, 90f, 90f, 90f, 90f, 90f, 90f, 90f };
+    public enum PostureE { Standing, Sitting, Lying }
+    public Dictionary<int, int> RangeDict = new(){
+        {0, 55},
+        {45, 45},
+        {90, 35},
+        {135, 45},
+        {180, 55},
+        {225, 45},
+        {270, 35},
+        {315, 45},
+    };
 
-    [Header("Task Data")]
+    [Header("Task Setting")]
     public int ParticipantID = 0;
     public PostureE Posture = PostureE.Standing;
-
-    [System.Serializable]
-    public class Task
-    {
-        public DirectionE direction;
-        public RangePercentageE percentage;
-    }
-    public List<Task> TaskList = new();
+    private List<int> DirectionList = new();
 
     // Data Recording
-    private float Interval = 0.1f;
+    public float Interval = 0.02f;
     private float Timer = 0f;
-    private float t, hPolar, hAzimuth, sPolar, sAzimuth, lgPolar, lgAzimuth, rgPolar, rgAzimuth;
-    private string Status = "not-testing";
+    private Vector3 HeadStartVector;
+    private Vector3 TrunkStartVector;
+    private float timestamp, hPolar, hAzimuth, tPolar, tAzimuth;
 
-    [Header("Saving Path")]
-    public string Folder = @"";
+    // CSV File Setting
+    [Header("File Setting")]
+    public string MaterialsFolder = @"Materials";
+    public string ResultFolder = @"Result";
     private string FullPath = "";
     private FileStream fs;
     private StreamWriter sw;
 
+    // Emg
     private EMGLogger_O _emg_logger;
 
 
@@ -229,155 +168,127 @@ public class Manager2 : MonoBehaviour
         EndArea.transform.position = new Vector3(0, 20, 0);
         EndArea.GetComponent<Renderer>().enabled = false;
 
-        string emg_folder = Path.Combine(Folder, "emg_data", "Formative_O1_P" + ParticipantID.ToString());
-        _emg_logger = new EMGLogger_O(dirname: emg_folder);
-
-        // Reading MaxViewingRange from CSV
-        FullPath = Path.Combine(Folder, "Formative_T1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
-        if (File.Exists(FullPath))
-        {
-            using (var reader = new StreamReader(FullPath))
-            {
+        // Reading Task Order
+        FullPath = Path.Combine(MaterialsFolder, "Formative_T2_Order.csv");
+        if (File.Exists(FullPath)) {
+            using (var reader = new StreamReader(FullPath)) {
                 reader.ReadLine(); // skip header
-                while (!reader.EndOfStream)
-                {
+                while (!reader.EndOfStream) {
                     var line = reader.ReadLine();
                     var values = line.Split(',');
-                    if (values.Length != 4)
-                    {
-                        continue;
+
+                    int participants = int.Parse(values[0]);
+                    string posture = values[1];
+
+                    if(participants == ParticipantID && posture == Posture.ToString()) {
+                        for (int i = 2; i < values.Length; i++) {
+                            DirectionList.Add(int.Parse(values[i]));
+                        }
                     }
-
-                    int direction = int.Parse(values[2]) / 45;
-                    float range = float.Parse(values[3]);
-
-                    MaxViewingRange[direction] = range;
                 }
-                
-                Debug.Log("Read Success!");
             }
         }
 
-        // Open CSV File
-        FullPath = Path.Combine(Folder, "Formative_O1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
-        if (File.Exists(FullPath))
-        {
-            fs = new FileStream(FullPath, FileMode.Append, FileAccess.Write);
-            sw = new StreamWriter(fs);
-            Debug.Log("Open Success!");
-        }
-        else
-        {
-            fs = new FileStream(FullPath, FileMode.Create, FileAccess.Write);
-            sw = new StreamWriter(fs);
-            string Header = "time,Status,HeadPolar,HeadAzimuth,ShoulderPolar,ShoulderAzimuth,LeftGazePolar,LeftGazeAzimuth,RightGazePolar,RightGazeAzimuth";
-            sw.WriteLine(Header);
-            Debug.Log("Create Success!");
-        }
+        // Setting Result File
+        FullPath = Path.Combine(ResultFolder, "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
+        fs = new FileStream(FullPath, FileMode.OpenOrCreate);
+        sw = new StreamWriter(fs);
+        string Header = "Direction,Count,Time,TrunkPolar,TrunkAzimuth,TrunkPolar,TrunkAzimuth";
+        sw.WriteLine(Header);
+
+        // Emg
+        string emg_folder = Path.Combine(ResultFolder, "emg_data", "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString());
+        _emg_logger = new EMGLogger_O(dirname: emg_folder);
     }
 
     void Update()
     {
         if (redirect) {
-            if (endtests) {
-                sw.Close();
-                fs.Close();
-                return;
-            }
-            else{
-                if (!testing)
-                {
-                    if (count >= TaskList.Count)
-                    {
+            if (!endtests) {
+                if (!testing) {
+                    if (count >= DirectionList.Count) {
                         endtests = true;
-                        MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
+                        MessageText.text = "全部方向皆測試完成，請通知實驗人員並回答問卷\n請還不要拿下頭盔";
+                        _emg_logger.close();
                         sw.Close();
                         fs.Close();
-
-                        _emg_logger.close();
                     }
-                    else
-                    {
-                        if (ready)
-                        {
-                            MessageText.text = "按下 [A] 鍵來開始新測試";
-                            // start new test
-                            if (OVRInput.GetDown(OVRInput.Button.One))
-                            {
-                                float rotationAngle = EtoDirection(TaskList[count].direction);
-                                float viewingRange = EtoMaxViewingRange(TaskList[count].direction) * EtoRange(TaskList[count].percentage);
+                    else {
+                        if (rest) {
+                            MessageText.text = "此方向測試完成，請通知實驗人員並回答問卷\n還有下一項測試，請還不要拿下頭盔";
 
-                                CreateNewTrack(rotationAngle, viewingRange);
-                                Status = "Direction " + rotationAngle.ToString() + " / Range " + TaskList[count].percentage.ToString();
-
-                                MessageText.text = "請沿著軌道方向旋轉身體直到終點";
-
-                                count++;
-                                testing = true;
-                                _emg_logger.start_logging(viewingRange.ToString(), Posture.ToString());
+                            if (OVRInput.GetDown(OVRInput.Button.Two)) {
+                                rest = false;
                             }
-                            ready = false;
                         }
-                        else
-                        {
-                            MessageText.text = "請回到起始區域";
+                        else {
+                            if (ready) {
+                                MessageText.text = "按下 [A] 鍵來開始新測試";
+                                // start new test
+                                if (OVRInput.GetDown(OVRInput.Button.One)) {
+                                    int rotationAngle = DirectionList[count];
+                                    int viewingRange = RangeDict[rotationAngle];
+
+                                    CreateNewTrack(rotationAngle, viewingRange);
+
+                                    MessageText.text = "請沿著軌道方向旋轉身體直到終點";
+
+                                    tcount ++;
+                                    testing = true;
+
+                                    HeadStartVector = Camera.main.transform.forward;
+                                    if (enableTrunk){ TrunkStartVector = TrunkAnchor.transform.forward; }
+
+                                    _emg_logger.start_logging(rotationAngle.ToString(), Posture.ToString());
+                                }
+                                ready = false;
+                                hitEnd = false;
+                            } else {
+                                MessageText.text = "請回到起始區域";
+                                hitEnd = false;
+                            }
                         }
                     }
                 }
-                else
-                {
+                else {
                     // change color if collided
-                    if (Track != null)
-                    {
-                        if (hitTrack)
-                        {
+                    if (Track != null) {
+                        if (hitTrack) {
                             Track.startColor = triggerColor;
                             Track.endColor = triggerColor;
                             hitTrack = false;
-                        }
-                        else
-                        {
+                        } else {
                             Track.startColor = lineColor;
                             Track.endColor = lineColor;
                         }
                     }
 
-                    // timer countdown
-                    if (waiting)
-                    {
-                        int seconds = Mathf.FloorToInt(TimeRemain % 60) + 1;
-                        if (seconds < 0) seconds = 0;
-                        MessageText.text = "請維持此姿勢\n還剩" + seconds + "秒";
+                    if (hitEnd) {
+                        Track.startColor = endColor;
+                        Track.endColor = endColor;
 
-                        // end test
-                        if (TimeRemain > 0)
-                        {
-                            TimeRemain -= Time.deltaTime;
-                        }
-                        else
-                        {
-                            Track.startColor = endColor;
-                            Track.endColor = endColor;
-
-                            EndArea.transform.position = new Vector3(0, 20, 0);
-
+                        if (tcount >= 3) { // rest
                             testing = false;
                             ready = false;
-                            Status = "not-testing";
+                            rest = true;
 
-                            TimeRemain = 5f;
-                            _emg_logger.end_logging();
+                            tcount = 0;
+                            count ++;
+                        }
+                        else { // cointiue next task
+                            testing = false;
+                            ready = false;
                         }
 
-                        waiting = false;
+                        hitEnd = false;
                     }
-                    else
-                    {
-                        MessageText.text = "請沿著軌道方向旋轉身體直到終點";
-                    }    
+
+                    _emg_logger.end_logging();
+                    DataRecorder();
                 }
-                
-                DataRecorder();
+            }
+            else {
+                return;
             }
         }
         else
@@ -449,13 +360,14 @@ public class Manager2 : MonoBehaviour
 
     public void HitEndArea()
     {
-        waiting = true;
+        hitEnd = true;
     }
 
     void OnApplicationQuit()
     {
         sw.Close();
         fs.Close();
+        _emg_logger.close();
     }
 
     public void DataRecorder()
@@ -464,17 +376,13 @@ public class Manager2 : MonoBehaviour
         {
             Timer = Interval;
 
-            t = Time.time;
+            timestamp = Time.time;
             ForwardToSpherical(Camera.main.transform.forward, out hPolar, out hAzimuth);
-            ForwardToSpherical(ShoulderAnchor.transform.forward, out sPolar, out sAzimuth);
-            ForwardToSpherical(LeftEye.transform.forward, out lgPolar, out lgAzimuth);
-            ForwardToSpherical(RightEye.transform.forward, out rgPolar, out rgAzimuth);
+            if (enableTrunk) { ForwardToSpherical(TrunkAnchor.transform.forward, out tPolar, out tAzimuth); }
 
-            string Data = t.ToString() + "," + Status + ","
+            string Data = DirectionList[count].ToString() + "," + tcount.ToString() + "," + timestamp.ToString() + ","
                 + hPolar.ToString() + "," + hAzimuth.ToString() + ","
-                + sPolar.ToString() + "," + sAzimuth.ToString() + ","
-                + lgPolar.ToString() + "," + lgAzimuth.ToString() + ","
-                + rgPolar.ToString() + "," + rgAzimuth.ToString();
+                + tPolar.ToString() + "," + tAzimuth.ToString() + ",";
             sw.WriteLine(Data);
 
         }
