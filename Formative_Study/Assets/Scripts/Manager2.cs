@@ -193,12 +193,12 @@ public class Manager2 : MonoBehaviour
         FullPath = Path.Combine(ResultFolder, "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
         fs = new FileStream(FullPath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
-        string Header = "Direction,Count,Time,TrunkPolar,TrunkAzimuth,TrunkPolar,TrunkAzimuth";
+        string Header = "Direction,Count,Time,HeadPolar,HeadAzimuth,TrunkPolar,TrunkAzimuth";
         sw.WriteLine(Header);
 
         // Emg
-        string emg_folder = Path.Combine(ResultFolder, "emg_data", "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString());
-        _emg_logger = new EMGLogger_O(dirname: emg_folder);
+        // string emg_folder = Path.Combine(ResultFolder, "emg_data", "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString());
+        // _emg_logger = new EMGLogger_O(dirname: emg_folder);
     }
 
     void Update()
@@ -209,7 +209,7 @@ public class Manager2 : MonoBehaviour
                     if (count >= DirectionList.Count) {
                         endtests = true;
                         MessageText.text = "全部方向皆測試完成，請通知實驗人員並回答問卷\n請還不要拿下頭盔";
-                        _emg_logger.close();
+                        // _emg_logger.close();
                         sw.Close();
                         fs.Close();
                     }
@@ -239,7 +239,7 @@ public class Manager2 : MonoBehaviour
                                     HeadStartVector = Camera.main.transform.forward;
                                     if (enableTrunk){ TrunkStartVector = TrunkAnchor.transform.forward; }
 
-                                    _emg_logger.start_logging(rotationAngle.ToString(), Posture.ToString());
+                                    // _emg_logger.start_logging(rotationAngle.ToString(), Posture.ToString());
                                 }
                                 ready = false;
                                 hitEnd = false;
@@ -283,7 +283,7 @@ public class Manager2 : MonoBehaviour
                         hitEnd = false;
                     }
 
-                    _emg_logger.end_logging();
+                    // _emg_logger.end_logging();
                     DataRecorder();
                 }
             }
@@ -367,7 +367,7 @@ public class Manager2 : MonoBehaviour
     {
         sw.Close();
         fs.Close();
-        _emg_logger.close();
+        // _emg_logger.close();
     }
 
     public void DataRecorder()
@@ -380,11 +380,12 @@ public class Manager2 : MonoBehaviour
             ForwardToSpherical(Camera.main.transform.forward, out hPolar, out hAzimuth);
             if (enableTrunk) { ForwardToSpherical(TrunkAnchor.transform.forward, out tPolar, out tAzimuth); }
 
-            string Data = DirectionList[count].ToString() + "," + tcount.ToString() + "," + timestamp.ToString() + ","
-                + hPolar.ToString() + "," + hAzimuth.ToString() + ","
-                + tPolar.ToString() + "," + tAzimuth.ToString() + ",";
-            sw.WriteLine(Data);
-
+            if (count >= 0 && count < DirectionList.Count) {
+                string Data = DirectionList[count].ToString() + "," + tcount.ToString() + "," + timestamp.ToString() + ","
+                    + hPolar.ToString() + "," + hAzimuth.ToString() + ","
+                    + tPolar.ToString() + "," + tAzimuth.ToString() + ",";
+                sw.WriteLine(Data);
+            }
         }
         else
         {
