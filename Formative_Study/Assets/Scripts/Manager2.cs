@@ -5,6 +5,7 @@ using UnityEngine;
 using System.IO.Ports;
 using System.Threading;
 using System;
+using TMPro.Examples;
 
 public class EMGLogger_O
 {
@@ -98,14 +99,13 @@ public class Manager2 : MonoBehaviour
     private readonly float lineWidth = 0.8f;
     private Color lineColor = new(0.1f, 0.5f, 0.9f, 0.8f);
     private Color triggerColor = new(0.2f, 0.9f, 0.2f, 0.8f);
-    private Color endColor = new(0.9f, 0.1f, 0.1f, 0.8f);
+    private Color completeColor = new(0.9f, 0.1f, 0.1f, 0.8f);
     public Material lineMaterial;
     private MeshCollider Collider;
     private bool hitTrack = false;
 
     // Objects
     public GameObject EndArea;
-    public bool enableTrunk = false;
     public GameObject TrunkAnchor;
     public GameObject Message;
     private TextMeshProUGUI MessageText;
@@ -116,15 +116,15 @@ public class Manager2 : MonoBehaviour
     // Game Control
     private bool redirect = false;
     private bool ready = false; // if is ready to start new task (enter start area)
-    private int tcount = 0; // task countdown
-    private int count = 0; // total count
-    private bool hitEnd = false; // if task is done
-    private bool rest = false; // if is resting
-    private bool testing = false; // if task is running
-    private bool endtests = false; // if all tasks are done
+    private bool testing = false; // if is testing
+    private bool complete = false; // if current task is done (enter end area)
+    private bool resting = false; // if is resting
+    private bool completeAll = false; // if all tasks are complete
+    private int tcount = 1; // count for each task
+    private int count = 0; // total task count
 
     // Data Setting
-    public enum PostureE { Standing, Sitting, Lying }
+    public enum PostureE { Standing, Lying }
     public Dictionary<int, int> RangeDict = new(){
         {0, 55},
         {45, 45},
@@ -140,9 +140,11 @@ public class Manager2 : MonoBehaviour
     public int ParticipantID = 0;
     public PostureE Posture = PostureE.Standing;
     private List<int> DirectionList = new();
+    public bool enableTrunk = false;
+    public bool enableEmg = false;
 
     // Data Recording
-    public float Interval = 0.02f;
+    private float Interval = 0.02f;
     private float Timer = 0f;
     private Vector3 HeadStartVector;
     private Vector3 TrunkStartVector;
@@ -150,7 +152,7 @@ public class Manager2 : MonoBehaviour
 
     // CSV File Setting
     [Header("File Setting")]
-    public string MaterialsFolder = @"Materials";
+    public string MaterialsFolder = @"Materials"; // for task order file
     public string ResultFolder = @"Result";
     private string FullPath = "";
     private FileStream fs;
@@ -163,7 +165,6 @@ public class Manager2 : MonoBehaviour
     void Start()
     {
         MessageText = Message.GetComponent<TextMeshProUGUI>();
-        MessageText.text = "按下 [A] 鍵來重新定向";
 
         EndArea.transform.position = new Vector3(0, 20, 0);
         EndArea.GetComponent<Renderer>().enabled = false;
@@ -193,106 +194,22 @@ public class Manager2 : MonoBehaviour
         FullPath = Path.Combine(ResultFolder, "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
         fs = new FileStream(FullPath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
-        string Header = "Direction,Count,Time,HeadPolar,HeadAzimuth,TrunkPolar,TrunkAzimuth";
+        string Header = "Direction,tCount,Time,HeadPolar,HeadAzimuth,TrunkPolar,TrunkAzimuth";
         sw.WriteLine(Header);
 
         // Emg
-        // string emg_folder = Path.Combine(ResultFolder, "emg_data", "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString());
-        // _emg_logger = new EMGLogger_O(dirname: emg_folder);
+        if (enableEmg) {
+            string emg_folder = Path.Combine(ResultFolder, "emg_data", "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString());
+            _emg_logger = new EMGLogger_O(dirname: emg_folder);
+        }
     }
 
     void Update()
     {
-        if (redirect) {
-            if (!endtests) {
-                if (!testing) {
-                    if (count >= DirectionList.Count) {
-                        endtests = true;
-                        MessageText.text = "全部方向皆測試完成，請通知實驗人員並回答問卷\n請還不要拿下頭盔";
-                        // _emg_logger.close();
-                        sw.Close();
-                        fs.Close();
-                    }
-                    else {
-                        if (rest) {
-                            MessageText.text = "此方向測試完成，請通知實驗人員並回答問卷\n還有下一項測試，請還不要拿下頭盔";
+        // Redirect
+        if (!redirect) {
+            MessageText.text = "按下 [A] 鍵來重新定向";
 
-                            if (OVRInput.GetDown(OVRInput.Button.Two)) {
-                                rest = false;
-                            }
-                        }
-                        else {
-                            if (ready) {
-                                MessageText.text = "按下 [A] 鍵來開始新測試";
-                                // start new test
-                                if (OVRInput.GetDown(OVRInput.Button.One)) {
-                                    int rotationAngle = DirectionList[count];
-                                    int viewingRange = RangeDict[rotationAngle];
-
-                                    CreateNewTrack(rotationAngle, viewingRange);
-
-                                    MessageText.text = "請沿著軌道方向旋轉身體直到終點";
-
-                                    tcount ++;
-                                    testing = true;
-
-                                    HeadStartVector = Camera.main.transform.forward;
-                                    if (enableTrunk){ TrunkStartVector = TrunkAnchor.transform.forward; }
-
-                                    // _emg_logger.start_logging(rotationAngle.ToString(), Posture.ToString());
-                                }
-                                ready = false;
-                                hitEnd = false;
-                            } else {
-                                MessageText.text = "請回到起始區域";
-                                hitEnd = false;
-                            }
-                        }
-                    }
-                }
-                else {
-                    // change color if collided
-                    if (Track != null) {
-                        if (hitTrack) {
-                            Track.startColor = triggerColor;
-                            Track.endColor = triggerColor;
-                            hitTrack = false;
-                        } else {
-                            Track.startColor = lineColor;
-                            Track.endColor = lineColor;
-                        }
-                    }
-
-                    if (hitEnd) {
-                        Track.startColor = endColor;
-                        Track.endColor = endColor;
-
-                        if (tcount >= 3) { // rest
-                            testing = false;
-                            ready = false;
-                            rest = true;
-
-                            tcount = 0;
-                            count ++;
-                        }
-                        else { // cointiue next task
-                            testing = false;
-                            ready = false;
-                        }
-
-                        hitEnd = false;
-                    }
-
-                    // _emg_logger.end_logging();
-                    DataRecorder();
-                }
-            }
-            else {
-                return;
-            }
-        }
-        else
-        {
             if (OVRInput.GetDown(OVRInput.Button.One))
             {
                 StartRotation = Cam.transform.rotation;
@@ -300,7 +217,106 @@ public class Manager2 : MonoBehaviour
                 Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
                 redirect = true;
             }
+            return;
         }
+
+        // All tasks are complete
+        if (completeAll) {
+            MessageText.text = "此輪測試已全部完成，請稍待實驗人員指示";
+            return;
+        }
+
+        // Resting
+        if (resting) {
+            MessageText.text = "此方向測試完成，請回答下方問題：\n請問剛才任務的費力程度為何？\n一分為完全不費力、五分為非常費力";
+
+            // if (Input.GetKeyDown("space")) {
+            if (OVRInput.GetDown(OVRInput.Button.Two)) {
+
+                resting = false;
+                count ++;
+
+                if (count >= DirectionList.Count) {
+                    completeAll = true;
+
+                    // close log file
+                    sw.Close();
+                    fs.Close();
+                    if (enableEmg) _emg_logger.close();
+                }
+            }
+            return;
+        }
+
+        if (testing) {
+            // log data
+            DataRecorder();
+            if (enableEmg) _emg_logger.end_logging();
+
+
+            if (Track == null) {
+                Debug.LogWarning("Track is null");
+                return;
+            }
+
+            // change color if touch the track
+            if (hitTrack) {
+                Track.startColor = triggerColor;
+                Track.endColor = triggerColor;
+                hitTrack = false;
+            } else {
+                Track.startColor = lineColor;
+                Track.endColor = lineColor;
+            }
+
+
+            // enter end area
+            if (complete) {
+                Track.startColor = completeColor;
+                Track.endColor = completeColor;
+
+                tcount ++;
+                if (tcount > 3) {
+                    // Enter rest section
+                    resting = true;
+                    tcount = 1;
+                }
+
+                testing = false;
+                ready = false;
+                complete = false;
+            }
+        }
+        else {
+            // wait for ready
+            if (ready) {
+                MessageText.text = "按下 [A] 鍵來開始第 " + (count+1).ToString() + " 個方向的第 " + tcount.ToString() +" 次測試";
+
+                // start new task
+                if (OVRInput.GetDown(OVRInput.Button.One)) {
+                    int rotationAngle = DirectionList[count];
+                    int viewingRange = RangeDict[rotationAngle];
+
+                    CreateNewTrack(rotationAngle, viewingRange);
+
+                    MessageText.text = "請沿著軌道方向旋轉到終點";
+
+                    HeadStartVector = Camera.main.transform.forward;
+
+                    if (enableTrunk) TrunkStartVector = TrunkAnchor.transform.forward;
+                    if (enableEmg) _emg_logger.start_logging(rotationAngle.ToString(), Posture.ToString());
+
+                    testing = true;
+                    complete = false;
+                }
+
+                ready = false;
+            } else {
+                MessageText.text = "請回到起始區域";
+            }
+        }
+
+        return;
     }
 
     public void CreateNewTrack(float rotationAngle, float viewingRange)
@@ -360,14 +376,7 @@ public class Manager2 : MonoBehaviour
 
     public void HitEndArea()
     {
-        hitEnd = true;
-    }
-
-    void OnApplicationQuit()
-    {
-        sw.Close();
-        fs.Close();
-        // _emg_logger.close();
+        complete = true;
     }
 
     public void DataRecorder()

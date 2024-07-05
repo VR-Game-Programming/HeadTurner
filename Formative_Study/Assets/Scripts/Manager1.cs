@@ -13,7 +13,7 @@ public class Manager1 : MonoBehaviour
     private readonly float lineWidth = 0.6f;
     private Color lineColor = new Color(0.1f, 0.5f, 0.9f, 0.8f);
     private Color triggerColor = new Color(0.2f, 0.9f, 0.2f, 0.8f);
-    private Color endColor = new Color(0.9f, 0.1f, 0.1f, 0.8f);
+    private Color completeColor = new Color(0.9f, 0.1f, 0.1f, 0.8f);
     public Material lineMaterial;
     private MeshCollider Collider;
     private bool hitTrack = false;
@@ -27,14 +27,16 @@ public class Manager1 : MonoBehaviour
 
     // Game Control
     private bool redirect = false;
-    private bool ready = false;
-    private int tcount = 0;
-    private int count = 0;
-    private bool testing = false;
-    private bool endtests = false;
+    private bool ready = false; // if is ready to start new task (enter start area)
+    private bool testing = false; // if is testing
+    private bool resting = false; // if is resting
+    private bool completeAll = false; // if all tasks are complete
+    private int tcount = 1; // count for each task
+    private int count = 0; // total task count
+
 
     // Data Setting
-    public enum PostureE { Standing, Sitting, Lying }
+    public enum PostureE { Standing, Lying }
 
     [Header("Task Setting")]
     public int ParticipantID = 0;
@@ -56,7 +58,6 @@ public class Manager1 : MonoBehaviour
     void Start()
     {
         MessageText = Message.GetComponent<TextMeshProUGUI>();
-        MessageText.text = "按下 [A] 鍵來重新定向";
 
         // Reading Task Order
         FullPath = Path.Combine(MaterialsFolder, "Formative_T1_Order.csv");
@@ -83,85 +84,16 @@ public class Manager1 : MonoBehaviour
         FullPath = Path.Combine(ResultFolder, "Formative_T1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
         fs = new FileStream(FullPath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
-        string Header = "Participant,Posture,tcount,Direction,MaxViewingRange";
+        string Header = "Participant,Posture,tCount,Direction,MaxViewingRange";
         sw.WriteLine(Header);
     }
 
     void Update()
     {
-        if (redirect) {
-            if (!endtests) {
-                if (!testing) {
-                    if (count >= DirectionList.Count) {
-                        endtests = true;
-                        MessageText.text = "此輪測試已全部完成\n請通知實驗人員";
+        // Redirect
+        if (!redirect) {
+            MessageText.text = "按下 [A] 鍵來重新定向";
 
-                        sw.Close();
-                        fs.Close();
-                    }
-                    else {
-                        if (!ready) {
-                            MessageText.text = "請回到起始區域";
-                        } else {
-                            MessageText.text = "按下 [A] 鍵來開始新測試";
-                            // start new test
-                            if (OVRInput.GetDown(OVRInput.Button.One)) {
-                                float rotationAngle = DirectionList[count];
-
-                                CreateNewTrack(rotationAngle, 180);
-                                MessageText.text = "請沿著軌道方向旋轉身體到最大距離\n按下 [A] 鍵來結束測試";
-
-                                StartVector = Camera.main.transform.forward;
-                                
-                                tcount ++;
-                                testing = true;
-                            }
-                            ready = false;
-                        }
-                    }
-                }
-                else {
-                    // change color if collided
-                    if (Track != null) {
-                        if (hitTrack) {
-                            Track.startColor = triggerColor;
-                            Track.endColor = triggerColor;
-                            hitTrack = false;
-                        } else {
-                            Track.startColor = lineColor;
-                            Track.endColor = lineColor;
-                        }
-                    }
-                    // end test
-                    if (OVRInput.GetDown(OVRInput.Button.One)) {
-                        Track.startColor = endColor;
-                        Track.endColor = endColor;
-
-                        testing = false;
-                        ready = false;
-
-                        Vector3 EndVector = Camera.main.transform.forward;
-                        MaxViewingRange = Vector3.Angle(StartVector, EndVector);
-
-                        string NewLine = ParticipantID.ToString() + ',' + Posture.ToString() + ',' + tcount.ToString() + ','
-                        + DirectionList[count].ToString() + ',' + MaxViewingRange.ToString();
-
-                        sw.WriteLine(NewLine);
-
-                        Debug.Log("tcount: " + tcount.ToString() + " count: " + count.ToString());
-
-                        if (tcount >= 3) {
-                            tcount = 0;
-                            count ++;
-                        }
-                    }
-                }
-            }
-            else {
-                return;
-            }
-        }
-        else {
             if (OVRInput.GetDown(OVRInput.Button.One))
             {
                 StartRotation = Cam.transform.rotation;
@@ -169,7 +101,103 @@ public class Manager1 : MonoBehaviour
                 Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
                 redirect = true;
             }
+            return;
         }
+
+        // All tasks are complete
+        if (completeAll) {
+            MessageText.text = "此輪測試已全部完成，請稍待實驗人員指示";
+            return;
+        }
+
+        // Resting
+        if (resting) {
+            if (count >= DirectionList.Count) {
+                completeAll = true;
+
+                // close log file
+                sw.Close();
+                fs.Close();
+                return;
+            }
+
+            MessageText.text = "此方向測試完成\n請稍待實驗人員指示";
+            // if (Input.GetKeyDown("space")) {
+            if (OVRInput.GetDown(OVRInput.Button.Two)) {
+                resting = false;
+            }
+            return;
+        }
+
+        if (testing) {
+            if (Track == null) {
+                Debug.LogWarning("Track is null");
+                return;
+            }
+
+            // change color if touch the track
+            if (hitTrack) {
+                Track.startColor = triggerColor;
+                Track.endColor = triggerColor;
+                hitTrack = false;
+            } else {
+                Track.startColor = lineColor;
+                Track.endColor = lineColor;
+            }
+
+            // if end task
+            if (OVRInput.GetDown(OVRInput.Button.One)) {
+                Track.startColor = completeColor;
+                Track.endColor = completeColor;
+
+                // log data
+                Vector3 EndVector = Camera.main.transform.forward;
+                MaxViewingRange = Vector3.Angle(StartVector, EndVector);
+
+                if (count >= 0 && count < DirectionList.Count) {
+                    string NewLine = ParticipantID.ToString() + ',' + Posture.ToString() + ',' + tcount.ToString() + ','
+                        + DirectionList[count].ToString() + ',' + MaxViewingRange.ToString();
+
+                    sw.WriteLine(NewLine);
+                }
+
+                tcount ++;
+                if (tcount > 3) {
+                    // Enter rest section
+                    resting = true;
+                    tcount = 1;
+                    count ++;
+                }
+
+                testing = false;
+                ready = false;
+            }
+        }
+        else {
+            // wait for ready
+            if (ready) {
+                MessageText.text = "按下 [A] 鍵來開始第 " + (count+1).ToString() + " 個方向的第 " + tcount.ToString() +" 次測試";
+
+                // start new task
+                if (OVRInput.GetDown(OVRInput.Button.One)) {
+                    int rotationAngle = DirectionList[count];
+
+                    CreateNewTrack(rotationAngle, 180);
+
+                    MessageText.text = "請沿著軌道方向旋轉到最大距離\n按下 [A] 鍵來結束測試";
+
+                    StartVector = Camera.main.transform.forward;
+
+                    testing = true;
+                }
+
+                ready = false;
+            } else {
+                MessageText.text = "請回到起始區域";
+            }
+        }
+
+        return;
     }
 
     public void CreateNewTrack(float rotationAngle, float viewingRange)
@@ -225,11 +253,5 @@ public class Manager1 : MonoBehaviour
     public void Redirect()
     {
         redirect = true;
-    }
-
-    void OnApplicationQuit()
-    {
-        sw.Close();
-        fs.Close();
     }
 }
