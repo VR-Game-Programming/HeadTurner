@@ -228,7 +228,7 @@ public class Manager2 : MonoBehaviour
 
         // Resting
         if (resting) {
-            MessageText.text = "此方向測試完成，請回答下方問題：\n請問剛才任務的費力程度為何？\n一分為完全不費力、五分為非常費力";
+            MessageText.text = "此方向測試完成，請回答下方問題：\n請問剛才任務的費力程度為何？\n1分為完全不費力、7分為非常費力";
 
             // if (Input.GetKeyDown("space")) {
             if (OVRInput.GetDown(OVRInput.Button.Two)) {
