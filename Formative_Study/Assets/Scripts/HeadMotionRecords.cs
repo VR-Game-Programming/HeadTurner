@@ -4,7 +4,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DataRecorder : MonoBehaviour {
+public class HeadMotionRecords : MonoBehaviour {
     private string path;
     private FileStream fs;
     private StreamWriter sw;
