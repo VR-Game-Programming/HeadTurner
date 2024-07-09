@@ -182,7 +182,7 @@ public class Manager1 : MonoBehaviour
                 if (OVRInput.GetDown(OVRInput.Button.One)) {
                     int rotationAngle = DirectionList[count];
 
-                    CreateNewTrack(rotationAngle, 180);
+                    CreateNewTrack(rotationAngle, 270);
 
                     MessageText.text = "請沿著軌道方向旋轉到最大距離\n按下 [A] 鍵來結束測試";
 

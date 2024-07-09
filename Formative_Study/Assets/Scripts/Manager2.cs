@@ -171,18 +171,23 @@ public class Manager2 : MonoBehaviour
 
         // Reading Task Order
         FullPath = Path.Combine(MaterialsFolder, "Formative_T2_Order.csv");
-        if (File.Exists(FullPath)) {
-            using (var reader = new StreamReader(FullPath)) {
+        if (File.Exists(FullPath))
+        {
+            using (var reader = new StreamReader(FullPath))
+            {
                 reader.ReadLine(); // skip header
-                while (!reader.EndOfStream) {
+                while (!reader.EndOfStream)
+                {
                     var line = reader.ReadLine();
                     var values = line.Split(',');
 
                     int participants = int.Parse(values[0]);
                     string posture = values[1];
 
-                    if(participants == ParticipantID && posture == Posture.ToString()) {
-                        for (int i = 2; i < values.Length; i++) {
+                    if (participants == ParticipantID && posture == Posture.ToString())
+                    {
+                        for (int i = 2; i < values.Length; i++)
+                        {
                             DirectionList.Add(int.Parse(values[i]));
                         }
                     }
@@ -198,7 +203,8 @@ public class Manager2 : MonoBehaviour
         sw.WriteLine(Header);
 
         // Emg
-        if (enableEmg) {
+        if (enableEmg)
+        {
             string emg_folder = Path.Combine(ResultFolder, "emg_data", "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString());
             _emg_logger = new EMGLogger_O(dirname: emg_folder);
         }
@@ -207,7 +213,8 @@ public class Manager2 : MonoBehaviour
     void Update()
     {
         // Redirect
-        if (!redirect) {
+        if (!redirect)
+        {
             MessageText.text = "按下 [A] 鍵來重新定向";
 
             if (OVRInput.GetDown(OVRInput.Button.One))
@@ -221,22 +228,26 @@ public class Manager2 : MonoBehaviour
         }
 
         // All tasks are complete
-        if (completeAll) {
+        if (completeAll)
+        {
             MessageText.text = "此輪測試已全部完成，請稍待實驗人員指示";
             return;
         }
 
         // Resting
-        if (resting) {
+        if (resting)
+        {
             MessageText.text = "此方向測試完成，請回答下方問題：\n請問剛才任務的費力程度為何？\n1分為完全不費力、7分為非常費力";
 
             // if (Input.GetKeyDown("space")) {
-            if (OVRInput.GetDown(OVRInput.Button.Two)) {
+            if (OVRInput.GetDown(OVRInput.Button.Two))
+            {
 
                 resting = false;
-                count ++;
+                count++;
 
-                if (count >= DirectionList.Count) {
+                if (count >= DirectionList.Count)
+                {
                     completeAll = true;
 
                     // close log file
@@ -248,35 +259,42 @@ public class Manager2 : MonoBehaviour
             return;
         }
 
-        if (testing) {
+        if (testing)
+        {
             // log data
             DataRecorder();
             if (enableEmg) _emg_logger.end_logging();
 
 
-            if (Track == null) {
+            if (Track == null)
+            {
                 Debug.LogWarning("Track is null");
                 return;
             }
 
             // change color if touch the track
-            if (hitTrack) {
+            if (hitTrack)
+            {
                 Track.startColor = triggerColor;
                 Track.endColor = triggerColor;
                 hitTrack = false;
-            } else {
+            }
+            else
+            {
                 Track.startColor = lineColor;
                 Track.endColor = lineColor;
             }
 
 
             // enter end area
-            if (complete) {
+            if (complete)
+            {
                 Track.startColor = completeColor;
                 Track.endColor = completeColor;
 
-                tcount ++;
-                if (tcount > 3) {
+                tcount++;
+                if (tcount > 3)
+                {
                     // Enter rest section
                     resting = true;
                     tcount = 1;
@@ -287,13 +305,16 @@ public class Manager2 : MonoBehaviour
                 complete = false;
             }
         }
-        else {
+        else
+        {
             // wait for ready
-            if (ready) {
-                MessageText.text = "按下 [A] 鍵來開始第 " + (count+1).ToString() + " 個方向的第 " + tcount.ToString() +" 次測試";
+            if (ready)
+            {
+                MessageText.text = "按下 [A] 鍵來開始第 " + (count + 1).ToString() + " 個方向的第 " + tcount.ToString() + " 次測試";
 
                 // start new task
-                if (OVRInput.GetDown(OVRInput.Button.One)) {
+                if (OVRInput.GetDown(OVRInput.Button.One))
+                {
                     int rotationAngle = DirectionList[count];
                     int viewingRange = RangeDict[rotationAngle];
 
@@ -311,7 +332,9 @@ public class Manager2 : MonoBehaviour
                 }
 
                 ready = false;
-            } else {
+            }
+            else
+            {
                 MessageText.text = "請回到起始區域";
             }
         }
@@ -379,6 +402,14 @@ public class Manager2 : MonoBehaviour
         complete = true;
     }
 
+    public void OnDestroy()
+    {
+        // close log file
+        sw.Close();
+        fs.Close();
+        if (enableEmg) _emg_logger.close();
+    }
+
     public void DataRecorder()
     {
         if (Timer - Time.deltaTime < 0)
@@ -389,7 +420,8 @@ public class Manager2 : MonoBehaviour
             ForwardToSpherical(Camera.main.transform.forward, out hPolar, out hAzimuth);
             if (enableTrunk) { ForwardToSpherical(TrunkAnchor.transform.forward, out tPolar, out tAzimuth); }
 
-            if (count >= 0 && count < DirectionList.Count) {
+            if (count >= 0 && count < DirectionList.Count)
+            {
                 string Data = DirectionList[count].ToString() + "," + tcount.ToString() + "," + timestamp.ToString() + ","
                     + hPolar.ToString() + "," + hAzimuth.ToString() + ","
                     + tPolar.ToString() + "," + tAzimuth.ToString() + ",";
@@ -402,7 +434,8 @@ public class Manager2 : MonoBehaviour
         }
     }
 
-    public static void ForwardToSpherical(Vector3 cartCoords, out float outPolar, out float outAzimuth){
+    public static void ForwardToSpherical(Vector3 cartCoords, out float outPolar, out float outAzimuth)
+    {
         // Radius is 1
         if (cartCoords.z == 0)
             cartCoords.z = Mathf.Epsilon;
