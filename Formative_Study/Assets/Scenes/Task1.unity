@@ -270,7 +270,7 @@ MonoBehaviour:
   Cam: {fileID: 278696263}
   Viewport: {fileID: 1542296453}
   ParticipantID: 1
-  Posture: 1
+  Posture: 0
   MaterialsFolder: Materials
   ResultFolder: Result
 --- !u!4 &336128671
