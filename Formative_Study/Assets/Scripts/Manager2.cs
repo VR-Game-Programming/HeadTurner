@@ -123,6 +123,9 @@ public class Manager2 : MonoBehaviour
     private int tcount = 1; // count for each task
     private int count = 0; // total task count
 
+    private int frameCount = -1;
+    private Quaternion AvgRotation;
+
     // Data Setting
     public enum PostureE { Standing, Lying }
     public Dictionary<int, int> RangeDict = new(){
@@ -148,7 +151,7 @@ public class Manager2 : MonoBehaviour
     private float Timer = 0f;
     private Vector3 HeadStartVector;
     private Vector3 TrunkStartVector;
-    private float timestamp, hPolar, hAzimuth, tPolar, tAzimuth;
+    private float timestamp, hPitch, hYaw, tPitch, tYaw;
 
     // CSV File Setting
     [Header("File Setting")]
@@ -170,7 +173,7 @@ public class Manager2 : MonoBehaviour
         EndArea.GetComponent<Renderer>().enabled = false;
 
         // Reading Task Order
-        FullPath = Path.Combine(MaterialsFolder, "Formative_T2_Order.csv");
+        FullPath = Path.Combine(MaterialsFolder, "Formative_Order.csv");
         if (File.Exists(FullPath))
         {
             using (var reader = new StreamReader(FullPath))
@@ -199,7 +202,7 @@ public class Manager2 : MonoBehaviour
         FullPath = Path.Combine(ResultFolder, "Formative_O3_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
         fs = new FileStream(FullPath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
-        string Header = "Direction,tCount,Time,HeadPolar,HeadAzimuth,TrunkPolar,TrunkAzimuth";
+        string Header = "Direction,tCount,Time,HeadRotation,HeadPitch,HeadYaw,TrunkRotation,TrunkPitch,TrunkYaw,StartRotation";
         sw.WriteLine(Header);
 
         // Emg
@@ -217,12 +220,22 @@ public class Manager2 : MonoBehaviour
         {
             MessageText.text = "按下 [A] 鍵來重新定向";
 
-            if (OVRInput.GetDown(OVRInput.Button.One))
+            if (frameCount < 0)
             {
-                StartRotation = Cam.transform.rotation;
-                Debug.Log("Start Rotation: " + StartRotation.eulerAngles.ToString());
+                if (OVRInput.GetDown(OVRInput.Button.One))
+                {
+                    AvgRotation = Cam.transform.rotation;
+                    frameCount = 0;
+                }
+            }
+            else if (frameCount >= 10) {
+                StartRotation = Quaternion.Lerp(AvgRotation, Cam.transform.rotation, 0.5f);
                 Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
                 redirect = true;
+            }
+            else {
+                AvgRotation = Quaternion.Lerp(AvgRotation, Cam.transform.rotation, 0.5f);
+                frameCount ++;
             }
             return;
         }
@@ -417,14 +430,29 @@ public class Manager2 : MonoBehaviour
             Timer = Interval;
 
             timestamp = Time.time;
-            ForwardToSpherical(Camera.main.transform.forward, out hPolar, out hAzimuth);
-            if (enableTrunk) { ForwardToSpherical(TrunkAnchor.transform.forward, out tPolar, out tAzimuth); }
+            Quaternion HeadDiffRotation = Camera.main.transform.rotation * Quaternion.Inverse(StartRotation);
+            hPitch = HeadDiffRotation.eulerAngles.x;
+            // turn down positive, turn up negative
+            if (hPitch > 180) hPitch -= 360;
+            hYaw = HeadDiffRotation.eulerAngles.y;
+            // turn left positive, turn right negative
+            if (hYaw > 180) hYaw -= 360;
+
+            if (enableTrunk) {
+                Quaternion TrunkDiffRotation = TrunkAnchor.transform.rotation * Quaternion.Inverse(StartRotation);
+                tPitch = TrunkDiffRotation.eulerAngles.x;
+                if (tPitch > 180) tPitch -= 360;
+                tYaw = TrunkDiffRotation.eulerAngles.y;
+                if (tYaw > 180) tYaw -= 360;
+            }
 
             if (count >= 0 && count < DirectionList.Count)
             {
                 string Data = DirectionList[count].ToString() + "," + tcount.ToString() + "," + timestamp.ToString() + ","
-                    + hPolar.ToString() + "," + hAzimuth.ToString() + ","
-                    + tPolar.ToString() + "," + tAzimuth.ToString() + ",";
+                    + Camera.main.transform.rotation.eulerAngles.ToString().Replace(",", "*") + "," + hPitch.ToString() + "," + hYaw.ToString() + ","
+                    + TrunkAnchor.transform.rotation.eulerAngles.ToString().Replace(",", "*") + "," + tPitch.ToString() + "," + tYaw.ToString() + ","
+                    + StartRotation.eulerAngles.ToString().Replace(",", "*");
+
                 sw.WriteLine(Data);
             }
         }
@@ -434,14 +462,14 @@ public class Manager2 : MonoBehaviour
         }
     }
 
-    public static void ForwardToSpherical(Vector3 cartCoords, out float outPolar, out float outAzimuth)
+    public static void ForwardToSpherical(Vector3 cartCoords, out float outPitch, out float outYaw)
     {
         // Radius is 1
         if (cartCoords.z == 0)
             cartCoords.z = Mathf.Epsilon;
-        outPolar = Mathf.Atan(cartCoords.x / cartCoords.z) * Mathf.Rad2Deg;
+        outPitch = Mathf.Atan(cartCoords.x / cartCoords.z) * Mathf.Rad2Deg;
         if (cartCoords.z < 0)
-            outPolar += Mathf.PI;
-        outAzimuth = Mathf.Asin(cartCoords.y / 1) * Mathf.Rad2Deg;
+            outPitch += Mathf.PI;
+        outYaw = Mathf.Asin(cartCoords.y / 1) * Mathf.Rad2Deg;
     }
 }

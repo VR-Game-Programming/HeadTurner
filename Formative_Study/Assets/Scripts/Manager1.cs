@@ -34,6 +34,8 @@ public class Manager1 : MonoBehaviour
     private int tcount = 1; // count for each task
     private int count = 0; // total task count
 
+    private int frameCount = -1;
+    private Quaternion AvgRotation;
 
     // Data Setting
     public enum PostureE { Standing, Lying }
@@ -60,7 +62,7 @@ public class Manager1 : MonoBehaviour
         MessageText = Message.GetComponent<TextMeshProUGUI>();
 
         // Reading Task Order
-        FullPath = Path.Combine(MaterialsFolder, "Formative_T1_Order.csv");
+        FullPath = Path.Combine(MaterialsFolder, "Formative_Order.csv");
         if (File.Exists(FullPath)) {
             using (var reader = new StreamReader(FullPath)) {
                 reader.ReadLine(); // skip header
@@ -91,14 +93,26 @@ public class Manager1 : MonoBehaviour
     void Update()
     {
         // Redirect
-        if (!redirect) {
+        if (!redirect)
+        {
             MessageText.text = "按下 [A] 鍵來重新定向";
 
-            if (OVRInput.GetDown(OVRInput.Button.One))
+            if (frameCount < 0)
             {
-                StartRotation = Cam.transform.rotation;
+                if (OVRInput.GetDown(OVRInput.Button.One))
+                {
+                    AvgRotation = Cam.transform.rotation;
+                    frameCount = 0;
+                }
+            }
+            else if (frameCount >= 10) {
+                StartRotation = Quaternion.Lerp(AvgRotation, Cam.transform.rotation, 0.5f);
                 Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
                 redirect = true;
+            }
+            else {
+                AvgRotation = Quaternion.Lerp(AvgRotation, Cam.transform.rotation, 0.5f);
+                frameCount ++;
             }
             return;
         }
@@ -166,10 +180,11 @@ public class Manager1 : MonoBehaviour
                 }
 
                 // if (count >= 0 && count < DirectionList.Count) {
-                string NewLine = ParticipantID.ToString() + ',' + Posture.ToString() + ',' + tcount.ToString() + ','
-                    + DirectionList[count].ToString() + ',' + MaxViewingRange.ToString() + ',' + StartVector.ToString().Replace(",", "*") + ',' + EndVector.ToString().Replace(",", "*") + ',' + StartRotation.eulerAngles.ToString().Replace(",", "*");
+                string Data = ParticipantID.ToString() + ',' + Posture.ToString() + ',' + tcount.ToString() + ','
+                    + DirectionList[count].ToString() + ',' + MaxViewingRange.ToString() + ','
+                    + StartVector.ToString().Replace(",", "*") + ',' + EndVector.ToString().Replace(",", "*") + ',' + StartRotation.eulerAngles.ToString().Replace(",", "*");
 
-                sw.WriteLine(NewLine);
+                sw.WriteLine(Data);
                 // }
 
                 tcount ++;

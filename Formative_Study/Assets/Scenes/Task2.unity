@@ -168,7 +168,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1438233528319916598, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1438233528319916599, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
       propertyPath: DrawMarkers
@@ -499,9 +499,9 @@ MonoBehaviour:
   Message: {fileID: 1190142452}
   Cam: {fileID: 892931418}
   Viewport: {fileID: 110278254}
-  ParticipantID: 2
-  Posture: 0
-  enableTrunk: 1
+  ParticipantID: 1
+  Posture: 1
+  enableTrunk: 0
   enableEmg: 0
   MaterialsFolder: Materials
   ResultFolder: Result
