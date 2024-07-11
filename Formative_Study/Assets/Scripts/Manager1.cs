@@ -84,7 +84,7 @@ public class Manager1 : MonoBehaviour
         FullPath = Path.Combine(ResultFolder, "Formative_T1_P" + ParticipantID.ToString() + "_" + Posture.ToString() + ".csv");
         fs = new FileStream(FullPath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
-        string Header = "Participant,Posture,tCount,Direction,MaxViewingRange";
+        string Header = "Participant,Posture,tCount,Direction,MaxViewingRange,StartVector,EndVector,StartRotation";
         sw.WriteLine(Header);
     }
 
@@ -97,7 +97,6 @@ public class Manager1 : MonoBehaviour
             if (OVRInput.GetDown(OVRInput.Button.One))
             {
                 StartRotation = Cam.transform.rotation;
-                Debug.Log("Start Rotation: " + StartRotation.eulerAngles.ToString());
                 Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
                 redirect = true;
             }
@@ -152,14 +151,26 @@ public class Manager1 : MonoBehaviour
 
                 // log data
                 Vector3 EndVector = Camera.main.transform.forward;
-                MaxViewingRange = Vector3.Angle(StartVector, EndVector);
+                MaxViewingRange = Vector3.SignedAngle(StartVector, EndVector, Vector3.up);
 
-                if (count >= 0 && count < DirectionList.Count) {
-                    string NewLine = ParticipantID.ToString() + ',' + Posture.ToString() + ',' + tcount.ToString() + ','
-                        + DirectionList[count].ToString() + ',' + MaxViewingRange.ToString();
-
-                    sw.WriteLine(NewLine);
+                if (DirectionList[count] == 90 || DirectionList[count] == 270) {
+                    MaxViewingRange = Mathf.Abs(MaxViewingRange);
                 }
+                // turn right
+                else if (DirectionList[count] > 90 || DirectionList[count] < 270) {
+                    MaxViewingRange = MaxViewingRange < 0 ? Mathf.Abs(MaxViewingRange) : 360 - MaxViewingRange;
+                }
+                // turn left
+                else {
+                    MaxViewingRange = MaxViewingRange < 0 ? 360 + MaxViewingRange : MaxViewingRange;
+                }
+
+                // if (count >= 0 && count < DirectionList.Count) {
+                string NewLine = ParticipantID.ToString() + ',' + Posture.ToString() + ',' + tcount.ToString() + ','
+                    + DirectionList[count].ToString() + ',' + MaxViewingRange.ToString() + ',' + StartVector.ToString().Replace(",", "*") + ',' + EndVector.ToString().Replace(",", "*") + ',' + StartRotation.eulerAngles.ToString().Replace(",", "*");
+
+                sw.WriteLine(NewLine);
+                // }
 
                 tcount ++;
                 if (tcount > 3) {
@@ -182,7 +193,7 @@ public class Manager1 : MonoBehaviour
                 if (OVRInput.GetDown(OVRInput.Button.One)) {
                     int rotationAngle = DirectionList[count];
 
-                    CreateNewTrack(rotationAngle, 270);
+                    CreateNewTrack(rotationAngle, 240);
 
                     MessageText.text = "請沿著軌道方向旋轉到最大距離\n按下 [A] 鍵來結束測試";
 
@@ -253,5 +264,11 @@ public class Manager1 : MonoBehaviour
     public void Redirect()
     {
         redirect = true;
+    }
+
+    public void OnDestroy()
+    {
+        sw.Close();
+        fs.Close();
     }
 }
