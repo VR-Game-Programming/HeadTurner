@@ -1,6 +1,21 @@
-## PLAN OF IMPLEMENTATION
+## PLAN OF IMPLEMENTATION FOR ANALYSIS AND PLOTTING OF OPTITRACK USER DATA
+## Description:
+##  The following code is divided into two parts:
+
+##  The first part is the analysis part, which aims to 
+##  do one major thing: analyze the data collected 
+##  by OptiTrack in .csv files. It analyzes and determines, 
+##  with the passage of time, whether or not the data shows the 
+##  user turning his/her head, and in which position (pitch, yaw, roll, etc.).
+
+##  The second part is the plotting part, where we mainly use the ggplot2 
+##  library to draw all the graphs.
+
 
 ##################################################################################################
+## PART 1: ANALYSIS OF DATA
+##################################################################################################
+
 ## PLAN 1 (abandoned, so not complete)
 
 ## Method: Compare two adjacent data points and calculate 
@@ -73,10 +88,7 @@ while (i < vdl_temp) {
 }
 ##################################################################################################
 
-
-
-##################################################################################################
-## PLAN 2 (Using)
+## PLAN 2 (Adopting)
 ## Method description: Data Processing: The original dataset contains a large number of 
 ##  data points with angles exceeding 180 degrees, with many even approaching 
 ##  360 degrees. It is my judgment that these data points are likely measurements 
@@ -152,23 +164,59 @@ check_valid_rotation <- function(data_vec, idx, threshold, valid_length) {
 }
 
 
-## Return the data_count list in the following order:
+## handle_outliers deals with the data that's greater than 180 or smaller than -180,
+##  and returns the list contains pitch_vec, yaw_vec and roll_vec in this order.
+handle_outliers <- function(pitch_vec, yaw_vec, roll_vec, valid_row, valid_length) {
+  for (i in valid_row:valid_length) {
+    
+    if (pitch_vec[i] > 180) {
+      pitch_vec[i] <- pitch_vec[i] - 360
+    }
+    else if (pitch_vec[i] < -180) {
+      pitch_vec[i] <- pitch_vec[i] + 360
+    }
+    if (yaw_vec[i] > 180) {
+      yaw_vec[i] <- yaw_vec[i] - 360
+    }
+    else if (yaw_vec[i] < -180) {
+      yaw_vec[i] <- yaw_vec[i] + 360
+    }
+    if (roll_vec[i] > 180) {
+      roll_vec[i] <- roll_vec[i] - 360
+    }
+    else if (roll_vec[i] < -180) {
+      roll_vec[i] <- roll_vec[i] + 360
+    }
+  }
+  cpy_list <- list(pitch_vec, yaw_vec, roll_vec)
+  return(cpy_list)
+}
+
+## data_filter_counter Function: This function will count the combinations 
+##  of rotations in the pitch, yaw, and roll directions, compiling them into 
+##  the data_count vector. It will also record the angle changes of each valid 
+##  head turn into the corresponding filtered vector. The function ultimately 
+##  returns a list containing the four pieces of information described below:
+
 ##  index 1 contains a vector that includes the counting results
 ##  of different head rotation combinations;
 ##  index 2 contains the vector of filtered pitch data;
 ##  index 3 contains the vector of filtered yaw data;
 ##  index 4 contains the vector of filtered roll data;
-## data_filter_counter Function: This function will count the combinations 
-##  of rotations in the pitch, yaw, and roll directions, compiling them into 
-##  the data_count vector. It will also record the angle changes of each valid 
-##  head turn into the corresponding filtered vector. The function ultimately 
-##  returns a list containing the four pieces of information described above.
 data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec, 
-                                current_idx, valid_length, valid_threshold) {
+                                current_idx, valid_length, 
+                                valid_threshold) {
   data_count <- c(0, 0, 0, 0, 0 ,0 ,0, 0)
   pitch_filtered_data <- numeric()
   yaw_filtered_data <- numeric()
   roll_filtered_data <- numeric()
+  
+  ## Handle the absolute angles > 180 degrees to the corrected range
+  vec_list <- handle_outliers(pitch_data_vec, yaw_data_vec, 
+                              roll_data_vec, current_idx, valid_length)
+  pitch_data_vec <- vec_list[[1]]
+  yaw_data_vec <- vec_list[[2]]
+  roll_data_vec <- vec_list[[3]]
   
   while (current_idx < valid_length) {
     
@@ -238,8 +286,12 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
   return(pack_list)
 }
 
+
 ##################################################################################################
-## ANALYSIS
+## PART 2: ANALYSIS
+##################################################################################################
+
+## APPs Names
 
 ## Beat Saber
 
@@ -289,8 +341,7 @@ bs_pack_list <- data_filter_counter(bs_pitch_cpy,
                                     valid_row, 
                                     bs_valid_data_length, 
                                     valid_threshold)
-
-
+##################################################################################################
 ## First Hand
 f <- file.choose()
 fh_data <- read.csv(f)
@@ -311,21 +362,6 @@ fh_yaw_cpy <- fh_yaw_data
 fh_roll_cpy <- fh_roll_data
 
 
-## To deal with the data that's >= 180, 
-##  it actually means we turned our head in the opposite direction.
-for (i in valid_row:fh_valid_data_length) {
-  
-  if (fh_pitch_cpy[i] >= 180) {
-    fh_pitch_cpy[i] <- fh_pitch_cpy[i] - 360
-  }
-  if (fh_yaw_cpy[i] >= 180) {
-    fh_yaw_cpy[i] <- fh_yaw_cpy[i] - 360
-  }
-  if (fh_roll_cpy[i] >= 180) {
-    fh_roll_cpy[i] <- fh_roll_cpy[i] - 360
-  }
-}
-
 # Instance
 fh_pack_list <- data_filter_counter(fh_pitch_cpy, 
                                     fh_yaw_cpy, 
@@ -333,8 +369,7 @@ fh_pack_list <- data_filter_counter(fh_pitch_cpy,
                                     valid_row, 
                                     fh_valid_data_length, 
                                     valid_threshold)
-
-
+##################################################################################################
 ## Super Hot
 f <- file.choose()
 sh_data <- read.csv(f)
@@ -355,22 +390,6 @@ sh_yaw_cpy <- sh_yaw_data
 sh_roll_cpy <- sh_roll_data
 
 
-## To deal with the data that's >= 180, 
-##  it actually means we turned our head in the opposite direction.
-
-for (i in valid_row:sh_valid_data_length) {
-  
-  if (sh_pitch_cpy[i] >= 180) {
-    sh_pitch_cpy[i] <- sh_pitch_cpy[i] - 360
-  }
-  if (sh_yaw_cpy[i] >= 180) {
-    sh_yaw_cpy[i] <- sh_yaw_cpy[i] - 360
-  }
-  if (sh_roll_cpy[i] >= 180) {
-    sh_roll_cpy[i] <- sh_roll_cpy[i] - 360
-  }
-}
-
 # Instance
 sh_pack_list <- data_filter_counter(sh_pitch_cpy, 
                                     sh_yaw_cpy, 
@@ -380,8 +399,11 @@ sh_pack_list <- data_filter_counter(sh_pitch_cpy,
                                     valid_threshold)
 
 
-
+##################################################################################################
 ## EcoSphere dataset 1
+## Comment: the reason of seperate EcoSphere into two parts is,
+##  I tried to watch two different videos in this app so I want
+##  to analysis them seperately.
 f <- file.choose()
 es1_data <- read.csv(f)
 valid_threshold <- 0.5
@@ -402,20 +424,6 @@ es1_yaw_cpy <- es1_yaw_data
 es1_roll_cpy <- es1_roll_data
 
 
-## To deal with the data that's >= 180, 
-##  it actually means we turned our head in the opposite direction.
-for (i in valid_row:es1_valid_data_length) {
-  
-  if (es1_pitch_cpy[i] >= 180) {
-    es1_pitch_cpy[i] <- es1_pitch_cpy[i] - 360
-  }
-  if (es1_yaw_cpy[i] >= 180) {
-    es1_yaw_cpy[i] <- es1_yaw_cpy[i] - 360
-  }
-  if (es1_roll_cpy[i] >= 180) {
-    es1_roll_cpy[i] <- es1_roll_cpy[i] - 360
-  }
-}
 
 # Instance
 es1_pack_list <- data_filter_counter(es1_pitch_cpy, 
@@ -425,7 +433,7 @@ es1_pack_list <- data_filter_counter(es1_pitch_cpy,
                                     es1_valid_data_length, 
                                     valid_threshold)
 
-
+##################################################################################################
 ## EcoSphere dataset 2
 f <- file.choose()
 es2_data <- read.csv(f)
@@ -446,22 +454,6 @@ es2_pitch_cpy <- es2_pitch_data
 es2_yaw_cpy <- es2_yaw_data
 es2_roll_cpy <- es2_roll_data
 
-
-## To deal with the data that's >= 180, 
-##  it actually means we turned our head in the opposite direction.
-
-for (i in valid_row:es2_valid_data_length) {
-  
-  if (es2_pitch_cpy[i] >= 180) {
-    es2_pitch_cpy[i] <- es2_pitch_cpy[i] - 360
-  }
-  if (es2_yaw_cpy[i] >= 180) {
-    es2_yaw_cpy[i] <- es2_yaw_cpy[i] - 360
-  }
-  if (es2_roll_cpy[i] >= 180) {
-    es2_roll_cpy[i] <- es2_roll_cpy[i] - 360
-  }
-}
 
 # Instance
 es2_pack_list <- data_filter_counter(es2_pitch_cpy, 
@@ -486,8 +478,8 @@ test_pack_list <- data_filter_counter(d1_test, d2_test, d3_test, valid_row_test,
 
 ## Plotting
 
-# 1.Stacked Bar Chart
-# Assume apps and valid_length_list are already defined
+# 1.Stacked bar chart
+# Assume apps is already defined
 apps <- list(bs_pack_list, fh_pack_list, sh_pack_list, es1_pack_list, es2_pack_list)
 
 # Create an empty data frame to store proportion data
@@ -536,5 +528,5 @@ ggplot(data, aes(x = App, y = Proportion, fill = Action)) +
        y = "Proportion") +
   theme_minimal()
 
-## 2.Line Chart
+## XXX Chart
 
