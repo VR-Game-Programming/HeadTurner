@@ -1,1 +1,540 @@
+## PLAN OF IMPLEMENTATION
+
+##################################################################################################
+## PLAN 1 (abandoned, so not complete)
+
+## Method: Compare two adjacent data points and calculate 
+##  their difference. If the difference is larger than our
+##  self-defined threshold, then we count it as a turn
+##  of the head.
+## Reason for abandonment: It's very difficult to find
+##  a consistent threshold to differentiate between
+##  valid movements and invalid ones. Small changes 
+##  can make a big difference.
+vdl_temp <- bs_valid_data_length
+bs_valid_data_length <- 0
+i <- 1
+bs_data_count <- c(0, 0, 0, 0, 0 ,0 ,0)
+differ <- 0.1
+
+## 1 for pitch; 2 for yaw; 3 for roll; 
+## 4 for pitch + yaw; 5 for pitch + roll;
+## 6 for yaw + roll; 7 for pitch + yaw + roll
+valid_length <- bs_valid_data_length
+bs_pitch_data <- vector("numeric", length = valid_length)
+bs_yaw_data <- vector("numeric", length = valid_length)
+bs_roll_data <- vector("numeric", length = valid_length)
+
+j <- 1
+current_time <- bs_time[1]
+record_idx <- 1
+
+while (i < vdl_temp) {
+  if (abs(current_time - bs_time[i]) >= 0.1) {
+    current_time <- bs_time[i]
+    if (abs(bs_pitch_cpy[i] - bs_pitch_cpy[record_idx]) > differ |
+        abs(bs_yaw_cpy[i] - bs_yaw_cpy[record_idx]) > differ |
+        abs(bs_roll_cpy[i] - bs_roll_cpy[record_idx]) > differ) {
+      if (abs(bs_pitch_cpy[i] - bs_pitch_cpy[record_idx]) > differ &&
+          abs(bs_yaw_cpy[i] - bs_yaw_cpy[record_idx]) > differ &&
+          abs(bs_roll_cpy[i] - bs_roll_cpy[record_idx]) > differ) {
+        bs_data_count[7] <- bs_data_count[7] + 1
+      } 
+      else if (abs(bs_pitch_cpy[i] - bs_pitch_cpy[record_idx]) > differ &&
+              abs(bs_yaw_cpy[i] - bs_yaw_cpy[record_idx]) > differ) {
+        bs_data_count[4] <- bs_data_count[4] + 1
+      } 
+      else if (abs(bs_pitch_cpy[i] - bs_pitch_cpy[record_idx]) > differ &&
+              abs(bs_roll_cpy[i] - bs_roll_cpy[record_idx]) > differ) {
+        bs_data_count[5] <- bs_data_count[5] + 1
+      } 
+      else if (abs(bs_yaw_cpy[i] - bs_yaw_cpy[record_idx]) > differ &&
+              abs(bs_roll_cpy[i] - bs_roll_cpy[record_idx]) > differ) {
+        bs_data_count[6] <- bs_data_count[6] + 1
+      } 
+      else if (abs(bs_pitch_cpy[i] - bs_pitch_cpy[record_idx]) > differ) {
+        bs_data_count[1] <- bs_data_count[1] + 1
+      } 
+      else if (abs(bs_yaw_cpy[i] - bs_yaw_cpy[record_idx]) > differ) {
+        bs_data_count[2] <- bs_data_count[2] + 1
+      } 
+      else {
+        bs_data_count[3] <- bs_data_count[3] + 1
+      }
+      bs_valid_data_length <- bs_valid_data_length + 1
+      bs_pitch_data[j] <- bs_pitch_cpy[j]
+      bs_yaw_data[j] <- bs_yaw_cpy[j]
+      bs_roll_data[j] <- bs_roll_cpy[j]
+      j <- j + 1
+      record_idx <- i
+    }
+  }
+    i <- i + 1
+}
+##################################################################################################
+
+
+
+##################################################################################################
+## PLAN 2 (Using)
+## Method description: Data Processing: The original dataset contains a large number of 
+##  data points with angles exceeding 180 degrees, with many even approaching 
+##  360 degrees. It is my judgment that these data points are likely measurements 
+##  from the negative coordinate axis by OptiTrack. This is because, under normal 
+##  circumstances, the range for pitch, yaw, and roll should be between -180 and 180 
+##  degrees. Therefore, the first step is to process the data such that any value 
+##  exceeding 180 degrees is reduced by 360 degrees to obtain the correct rotational 
+##  coordinate angle.
+## The most crucial aspect is determining what constitutes a head turn. 
+##  I have adopted the threshold defined by OptiTrack Prime^x 13, which 
+##  indicates that each measurement may have a maximum error of 0.5 degrees. 
+##  If a segment of data changes its trend (i.e., the sign of the difference 
+##  between consecutive data points changes), we compare this segment to the 
+##  threshold. If the change exceeds the threshold, it is considered a valid 
+##  head turn. Therefore, the starting point of a head turn is the first value, 
+##  and the ending point is when the sign of the value changes.
+## This description pertains to determining rotation in a single direction. 
+##  When considering combinations of rotations in the pitch, yaw, and roll directions, 
+##  we need to determine the minimum change across the three directions and identify 
+##  which directions' movements are valid within this smallest segment. There are eight 
+##  possible combinations:
+## 1. Pure pitch
+## 2. Pure roll
+## 3. Pure yaw
+## 4. Pitch + roll
+## 5. Pitch + yaw
+## 6. Roll + yaw
+## 7. Pitch + yaw + roll
+## 8. No motion
+## These eight combinations are recorded in the data_count vector. 
+##  Whenever a movement is determined to fall under any of these categories, 
+##  the angle change is recorded into the corresponding filtered vector.
+
+## Implementation:
+
+## count_same_trend counts the number of increments in a section determines 
+##  how many data points will be counted and returns the length.
+count_same_trend <- function(data_vec, idx, valid_length) {
+  same_trend_num <- 0
+  trend <- ifelse(data_vec[idx + 1] - data_vec[idx] >= 0, 1, -1)
+  
+  while (idx < valid_length) {
+    
+    if ((data_vec[idx + 1] - data_vec[idx]) * trend < 0) {
+      return(same_trend_num)
+    } else {
+      same_trend_num <- same_trend_num + 1
+      idx <- idx + 1
+    }
+  }
+  return(same_trend_num)
+}
+
+## Check whether it is a valid head turn and return a list that includes 
+##  a boolean and the rotation angle.
+check_valid_rotation <- function(data_vec, idx, threshold, valid_length) {
+  data_sum <- 0
+  trend <- ifelse(data_vec[idx + 1] - data_vec[idx] >= 0, 1, -1)
+  rotation_data <- list(F, 0)
+  while (idx < valid_length) {
+    if (((data_vec[idx + 1] - data_vec[idx]) * trend) < 0) {
+      break
+    } else {
+      data_sum <- data_sum + abs(data_vec[idx + 1] - data_vec[idx])
+      idx <- idx + 1
+    }
+  }
+  if (data_sum > threshold) {
+    rotation_data[[1]] <- T
+    rotation_data[[2]] <- data_sum
+  }
+  return(rotation_data)
+}
+
+
+## Return the data_count list in the following order:
+##  index 1 contains a vector that includes the counting results
+##  of different head rotation combinations;
+##  index 2 contains the vector of filtered pitch data;
+##  index 3 contains the vector of filtered yaw data;
+##  index 4 contains the vector of filtered roll data;
+## data_filter_counter Function: This function will count the combinations 
+##  of rotations in the pitch, yaw, and roll directions, compiling them into 
+##  the data_count vector. It will also record the angle changes of each valid 
+##  head turn into the corresponding filtered vector. The function ultimately 
+##  returns a list containing the four pieces of information described above.
+data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec, 
+                                current_idx, valid_length, valid_threshold) {
+  data_count <- c(0, 0, 0, 0, 0 ,0 ,0, 0)
+  pitch_filtered_data <- numeric()
+  yaw_filtered_data <- numeric()
+  roll_filtered_data <- numeric()
+  
+  while (current_idx < valid_length) {
+    
+    ## Number of elements in the same trend
+    pitch_trend_num <- count_same_trend(pitch_data_vec, current_idx, valid_length)
+    yaw_trend_num <- count_same_trend(yaw_data_vec, current_idx, valid_length)
+    roll_trend_num <- count_same_trend(roll_data_vec, current_idx, valid_length)
+    min_trend_num <- min(pitch_trend_num, yaw_trend_num, roll_trend_num)
+    
+    pitch_turned <- check_valid_rotation(pitch_data_vec, 
+                                         current_idx, 
+                                         valid_threshold, 
+                                         valid_length)
+    yaw_turned <- check_valid_rotation(yaw_data_vec, 
+                                       current_idx, 
+                                       valid_threshold, 
+                                       valid_length)
+    roll_turned <- check_valid_rotation(roll_data_vec, 
+                                        current_idx, 
+                                        valid_threshold, 
+                                        valid_length)
+    ## 1 for pitch; 2 for yaw; 3 for roll; 
+    ## 4 for pitch + yaw; 5 for pitch + roll;
+    ## 6 for yaw + roll; 7 for pitch + yaw + roll
+    ## 8 for no motion
+    if (pitch_turned[[1]] | yaw_turned[[1]] | roll_turned[[1]]) {
+      if (pitch_turned[[1]] && yaw_turned[[1]] && roll_turned[[1]]) {
+        data_count[7] <- data_count[7] + 1
+        pitch_filtered_data <- c(pitch_filtered_data, pitch_turned[[2]])
+        yaw_filtered_data <- c(yaw_filtered_data, yaw_turned[[2]])
+        roll_filtered_data <- c(roll_filtered_data, roll_turned[[2]])
+      }
+      else if (pitch_turned[[1]] && yaw_turned[[1]]) {
+        data_count[4] <- data_count[4] + 1
+        pitch_filtered_data <- c(pitch_filtered_data, pitch_turned[[2]])
+        yaw_filtered_data <- c(yaw_filtered_data, yaw_turned[[2]])
+      }
+      else if (pitch_turned[[1]] && roll_turned[[1]]) {
+        data_count[5] <- data_count[5] + 1
+        pitch_filtered_data <- c(pitch_filtered_data, pitch_turned[[2]])
+        roll_filtered_data <- c(roll_filtered_data, roll_turned[[2]])
+      }
+      else if (yaw_turned[[1]] && roll_turned[[1]]) {
+        data_count[6] <- data_count[6] + 1
+        yaw_filtered_data <- c(yaw_filtered_data, yaw_turned[[2]])
+        roll_filtered_data <- c(roll_filtered_data, roll_turned[[2]])
+      }
+      else if (pitch_turned[[1]]) {
+        data_count[1] <- data_count[1] + 1
+        pitch_filtered_data <- c(pitch_filtered_data, pitch_turned[[2]])
+      }
+      else if (yaw_turned[[1]]) {
+        data_count[2] <- data_count[2] + 1
+        yaw_filtered_data <- c(yaw_filtered_data, yaw_turned[[2]])
+      }
+      else {
+        data_count[3] <- data_count[3] + 1
+        roll_filtered_data <- c(roll_filtered_data, roll_turned[[2]])
+      }
+    }
+    else {
+      data_count[8] <- data_count[8] + 1
+    }
+    current_idx <- current_idx + min_trend_num + 1
+  }
+  pack_list <- list(data_count, pitch_filtered_data, yaw_filtered_data, roll_filtered_data)
+  return(pack_list)
+}
+
+##################################################################################################
+## ANALYSIS
+
+## Beat Saber
+
+## Initialize data
+## Open our file (it should strictly align with our code, 
+##  as some of the data is unique to this specific file).
+f <- file.choose()
+bs_data <- read.csv(f)
+valid_threshold <- 0.5
+
+valid_row <- 2
+bs_pitch_data <- bs_data$Pitch[valid_row:length(bs_data$Pitch)]
+bs_yaw_data <- bs_data$Yaw[valid_row:length(bs_data$Yaw)]
+bs_roll_data <- bs_data$Roll[valid_row:length(bs_data$Roll)]
+bs_time <- bs_data$time[valid_row:length(bs_data$time)]
+bs_valid_data_length <- length(bs_pitch_data)
+
+
+## We make a copy of our data to show which data 
+##  has been deleted and how much.
+bs_pitch_cpy <- bs_pitch_data
+bs_yaw_cpy <- bs_yaw_data
+bs_roll_cpy <- bs_roll_data
+
+
+## To deal with the data that's >= 180, 
+##  it actually means we turned our head in the opposite direction.
+## Comment: I know it's better to write this as a function, I will
+##  correct this later.
+for (i in valid_row:bs_valid_data_length) {
+  
+  if (bs_pitch_cpy[i] >= 180) {
+    bs_pitch_cpy[i] <- bs_pitch_cpy[i] - 360
+  }
+  if (bs_yaw_cpy[i] >= 180) {
+    bs_yaw_cpy[i] <- bs_yaw_cpy[i] - 360
+  }
+  if (bs_roll_cpy[i] >= 180) {
+    bs_roll_cpy[i] <- bs_roll_cpy[i] - 360
+  }
+}
+
+## Incetance
+bs_pack_list <- data_filter_counter(bs_pitch_cpy, 
+                                    bs_yaw_cpy, 
+                                    bs_roll_cpy, 
+                                    valid_row, 
+                                    bs_valid_data_length, 
+                                    valid_threshold)
+
+
+## First Hand
+f <- file.choose()
+fh_data <- read.csv(f)
+valid_threshold <- 0.5
+valid_row <- 2
+
+fh_pitch_data <- fh_data$Pitch[valid_row:length(fh_data$Pitch)]
+fh_yaw_data <- fh_data$Yaw[valid_row:length(fh_data$Yaw)]
+fh_roll_data <- fh_data$Roll[valid_row:length(fh_data$Roll)]
+fh_time <- fh_data$time[valid_row:length(fh_data$time)]
+fh_valid_data_length <- length(fh_pitch_data)
+
+
+## We make a copy of our data to show which data 
+##  has been deleted and how much.
+fh_pitch_cpy <- fh_pitch_data
+fh_yaw_cpy <- fh_yaw_data
+fh_roll_cpy <- fh_roll_data
+
+
+## To deal with the data that's >= 180, 
+##  it actually means we turned our head in the opposite direction.
+for (i in valid_row:fh_valid_data_length) {
+  
+  if (fh_pitch_cpy[i] >= 180) {
+    fh_pitch_cpy[i] <- fh_pitch_cpy[i] - 360
+  }
+  if (fh_yaw_cpy[i] >= 180) {
+    fh_yaw_cpy[i] <- fh_yaw_cpy[i] - 360
+  }
+  if (fh_roll_cpy[i] >= 180) {
+    fh_roll_cpy[i] <- fh_roll_cpy[i] - 360
+  }
+}
+
+# Instance
+fh_pack_list <- data_filter_counter(fh_pitch_cpy, 
+                                    fh_yaw_cpy, 
+                                    fh_roll_cpy, 
+                                    valid_row, 
+                                    fh_valid_data_length, 
+                                    valid_threshold)
+
+
+## Super Hot
+f <- file.choose()
+sh_data <- read.csv(f)
+valid_threshold <- 0.5
+valid_row <- 2
+
+sh_pitch_data <- sh_data$Pitch[valid_row:length(sh_data$Pitch)]
+sh_yaw_data <- sh_data$Yaw[valid_row:length(sh_data$Yaw)]
+sh_roll_data <- sh_data$Roll[valid_row:length(sh_data$Roll)]
+sh_time <- sh_data$time[valid_row:length(sh_data$time)]
+sh_valid_data_length <- length(sh_pitch_data)
+
+
+## We make a copy of our data to show which data 
+##  has been deleted and how much.
+sh_pitch_cpy <- sh_pitch_data
+sh_yaw_cpy <- sh_yaw_data
+sh_roll_cpy <- sh_roll_data
+
+
+## To deal with the data that's >= 180, 
+##  it actually means we turned our head in the opposite direction.
+
+for (i in valid_row:sh_valid_data_length) {
+  
+  if (sh_pitch_cpy[i] >= 180) {
+    sh_pitch_cpy[i] <- sh_pitch_cpy[i] - 360
+  }
+  if (sh_yaw_cpy[i] >= 180) {
+    sh_yaw_cpy[i] <- sh_yaw_cpy[i] - 360
+  }
+  if (sh_roll_cpy[i] >= 180) {
+    sh_roll_cpy[i] <- sh_roll_cpy[i] - 360
+  }
+}
+
+# Instance
+sh_pack_list <- data_filter_counter(sh_pitch_cpy, 
+                                    sh_yaw_cpy, 
+                                    sh_roll_cpy, 
+                                    valid_row, 
+                                    sh_valid_data_length, 
+                                    valid_threshold)
+
+
+
+## EcoSphere dataset 1
+f <- file.choose()
+es1_data <- read.csv(f)
+valid_threshold <- 0.5
+valid_row <- 2
+
+
+es1_pitch_data <- es1_data$Pitch[valid_row:length(es1_data$Pitch)]
+es1_yaw_data <- es1_data$Yaw[valid_row:length(es1_data$Yaw)]
+es1_roll_data <- es1_data$Roll[valid_row:length(es1_data$Roll)]
+es1_time <- es1_data$time[valid_row:length(es1_data$time)]
+es1_valid_data_length <- length(es1_pitch_data)
+
+
+## We make a copy of our data to show which data 
+##  has been deleted and how much.
+es1_pitch_cpy <- es1_pitch_data
+es1_yaw_cpy <- es1_yaw_data
+es1_roll_cpy <- es1_roll_data
+
+
+## To deal with the data that's >= 180, 
+##  it actually means we turned our head in the opposite direction.
+for (i in valid_row:es1_valid_data_length) {
+  
+  if (es1_pitch_cpy[i] >= 180) {
+    es1_pitch_cpy[i] <- es1_pitch_cpy[i] - 360
+  }
+  if (es1_yaw_cpy[i] >= 180) {
+    es1_yaw_cpy[i] <- es1_yaw_cpy[i] - 360
+  }
+  if (es1_roll_cpy[i] >= 180) {
+    es1_roll_cpy[i] <- es1_roll_cpy[i] - 360
+  }
+}
+
+# Instance
+es1_pack_list <- data_filter_counter(es1_pitch_cpy, 
+                                    es1_yaw_cpy, 
+                                    es1_roll_cpy, 
+                                    valid_row, 
+                                    es1_valid_data_length, 
+                                    valid_threshold)
+
+
+## EcoSphere dataset 2
+f <- file.choose()
+es2_data <- read.csv(f)
+valid_threshold <- 0.5
+valid_row <- 2
+
+
+es2_pitch_data <- es2_data$Pitch[valid_row:length(es2_data$Pitch)]
+es2_yaw_data <- es2_data$Yaw[valid_row:length(es2_data$Yaw)]
+es2_roll_data <- es2_data$Roll[valid_row:length(es2_data$Roll)]
+es2_time <- es2_data$time[valid_row:length(es2_data$time)]
+es2_valid_data_length <- length(es2_pitch_data)
+
+
+## We make a copy of our data to show which data 
+##  has been deleted and how much.
+es2_pitch_cpy <- es2_pitch_data
+es2_yaw_cpy <- es2_yaw_data
+es2_roll_cpy <- es2_roll_data
+
+
+## To deal with the data that's >= 180, 
+##  it actually means we turned our head in the opposite direction.
+
+for (i in valid_row:es2_valid_data_length) {
+  
+  if (es2_pitch_cpy[i] >= 180) {
+    es2_pitch_cpy[i] <- es2_pitch_cpy[i] - 360
+  }
+  if (es2_yaw_cpy[i] >= 180) {
+    es2_yaw_cpy[i] <- es2_yaw_cpy[i] - 360
+  }
+  if (es2_roll_cpy[i] >= 180) {
+    es2_roll_cpy[i] <- es2_roll_cpy[i] - 360
+  }
+}
+
+# Instance
+es2_pack_list <- data_filter_counter(es2_pitch_cpy, 
+                                    es2_yaw_cpy, 
+                                    es2_roll_cpy, 
+                                    valid_row, 
+                                    es2_valid_data_length, 
+                                    valid_threshold)
+
+## Test
+d1_test <- c(2,3,4,1,2,9)
+d2_test <- c(-2,-3,-5,-7,-9,1)
+d3_test <- c(-2,2,-2,2,-2,2)
+valid_length_test <- 6
+valid_row_test <- 1
+valid_thres_test <- 2
+
+test_pack_list <- data_filter_counter(d1_test, d2_test, d3_test, valid_row_test,
+                                      valid_length_test, valid_thres_test)
+
+##################################################################################################
+
+## Plotting
+
+# 1.Stacked Bar Chart
+# Assume apps and valid_length_list are already defined
+apps <- list(bs_pack_list, fh_pack_list, sh_pack_list, es1_pack_list, es2_pack_list)
+
+# Create an empty data frame to store proportion data
+data <- data.frame(
+  App = character(),
+  Action = character(),
+  Proportion = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Define the names of each app
+app_names <- c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere2")
+
+# Iterate through each app, calculating the proportion of each action
+for (i in 1:length(apps)) {
+  app_data <- apps[[i]][[1]]
+  total_actions <- sum(app_data)
+  
+  
+  # Add proportion data to the data frame
+  data <- rbind(data, data.frame(App = app_names[i], Action = "None", Proportion = app_data[8] / total_actions))
+  data <- rbind(data, data.frame(App = app_names[i], Action = "Pitch", Proportion = app_data[1] / total_actions))
+  data <- rbind(data, data.frame(App = app_names[i], Action = "Yaw", Proportion = app_data[2] / total_actions))
+  data <- rbind(data, data.frame(App = app_names[i], Action = "Roll", Proportion = app_data[3] / total_actions))
+  data <- rbind(data, data.frame(App = app_names[i], Action = "Pitch+Yaw", Proportion = app_data[4] / total_actions))
+  data <- rbind(data, data.frame(App = app_names[i], Action = "Pitch+Roll", Proportion = app_data[5] / total_actions))
+  data <- rbind(data, data.frame(App = app_names[i], Action = "Yaw+Roll", Proportion = app_data[6] / total_actions))
+  data <- rbind(data, data.frame(App = app_names[i], Action = "Pitch+Yaw+Roll", Proportion = app_data[7] / total_actions))
+}
+
+# Use ggplot2 to plot the stacked bar chart
+library(ggplot2)
+
+ggplot(data, aes(x = App, y = Proportion, fill = Action)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("None" = "gray", 
+                               "Pitch" = "blue", 
+                               "Yaw" = "green", 
+                               "Roll" = "red", 
+                               "Pitch+Yaw" = "purple", 
+                               "Pitch+Roll" = "orange", 
+                               "Yaw+Roll" = "pink", 
+                               "Pitch+Yaw+Roll" = "yellow")) + 
+  labs(title = "Proportion of Head Movements in Different Apps",
+       x = "App",
+       y = "Proportion") +
+  theme_minimal()
+
+## 2.Line Chart
 
