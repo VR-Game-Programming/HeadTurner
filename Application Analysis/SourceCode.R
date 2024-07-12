@@ -13,7 +13,7 @@
 
 
 ##################################################################################################
-## PART 1: ANALYSIS OF DATA
+## PART 1.1: ANALYSIS OF DATA
 ##################################################################################################
 
 ## PLAN 1 (abandoned, so not complete)
@@ -288,7 +288,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
 
 
 ##################################################################################################
-## PART 2: ANALYSIS
+## PART 1.2: Instances
 ##################################################################################################
 
 ## APPs Names
@@ -462,7 +462,7 @@ es2_pack_list <- data_filter_counter(es2_pitch_cpy,
                                     valid_row, 
                                     es2_valid_data_length, 
                                     valid_threshold)
-
+##################################################################################################
 ## Test
 d1_test <- c(2,3,4,1,2,9)
 d2_test <- c(-2,-3,-5,-7,-9,1)
@@ -475,14 +475,15 @@ test_pack_list <- data_filter_counter(d1_test, d2_test, d3_test, valid_row_test,
                                       valid_length_test, valid_thres_test)
 
 ##################################################################################################
+## PART 2: PLOTTING
+##################################################################################################
 
-## Plotting
-
-# 1.Stacked bar chart
-# Assume apps is already defined
+## Plot 1:
+## Stacked bar chart
+## Assume apps is already defined
 apps <- list(bs_pack_list, fh_pack_list, sh_pack_list, es1_pack_list, es2_pack_list)
 
-# Create an empty data frame to store proportion data
+## Create an empty data frame to store proportion data
 data <- data.frame(
   App = character(),
   Action = character(),
@@ -490,16 +491,16 @@ data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Define the names of each app
+## Define the names of each app
 app_names <- c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere2")
 
-# Iterate through each app, calculating the proportion of each action
+## Iterate through each app, calculating the proportion of each action
 for (i in 1:length(apps)) {
   app_data <- apps[[i]][[1]]
   total_actions <- sum(app_data)
   
   
-  # Add proportion data to the data frame
+  ## Add proportion data to the data frame
   data <- rbind(data, data.frame(App = app_names[i], Action = "None", Proportion = app_data[8] / total_actions))
   data <- rbind(data, data.frame(App = app_names[i], Action = "Pitch", Proportion = app_data[1] / total_actions))
   data <- rbind(data, data.frame(App = app_names[i], Action = "Yaw", Proportion = app_data[2] / total_actions))
@@ -510,7 +511,7 @@ for (i in 1:length(apps)) {
   data <- rbind(data, data.frame(App = app_names[i], Action = "Pitch+Yaw+Roll", Proportion = app_data[7] / total_actions))
 }
 
-# Use ggplot2 to plot the stacked bar chart
+## Use ggplot2 to plot the stacked bar chart
 library(ggplot2)
 
 ggplot(data, aes(x = App, y = Proportion, fill = Action)) +
@@ -528,5 +529,6 @@ ggplot(data, aes(x = App, y = Proportion, fill = Action)) +
        y = "Proportion") +
   theme_minimal()
 
+## Plot 2:
 ## XXX Chart
 
