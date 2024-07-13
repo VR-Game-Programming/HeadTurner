@@ -168,7 +168,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1438233528319916598, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1438233528319916599, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
       propertyPath: DrawMarkers
@@ -501,7 +501,7 @@ MonoBehaviour:
   Viewport: {fileID: 110278254}
   ParticipantID: 1
   Posture: 1
-  enableTrunk: 0
+  enableTrunk: 1
   enableEmg: 0
   MaterialsFolder: Materials
   ResultFolder: Result
