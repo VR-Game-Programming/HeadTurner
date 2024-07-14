@@ -13,7 +13,7 @@
 
 
 ##################################################################################################
-## PART 1: ANALYSIS OF DATA
+## PART 1: ANALYSIS METHODS
 ##################################################################################################
 
 ## PLAN 1 (abandoned, so not complete)
@@ -323,12 +323,12 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
 
 
 ##################################################################################################
-## PART 2: ANALYSIS
+## PART 2: INSTANCE ANALYSIS
 ##################################################################################################
 
 ## APPs Names
-
-## Beat Saber
+##################################
+## 1.Beat Saber
 
 ## Initialize data
 ## Open our file (it should strictly align with our code, 
@@ -361,7 +361,7 @@ bs_pack_list <- data_filter_counter(bs_pitch_cpy,
                                     bs_valid_data_length, 
                                     valid_threshold)
 ##################################################################################################
-## First Hand
+## 2.First Hand
 f2 <- file.choose()
 fh_data <- read.csv(f2)
 valid_threshold <- 0.5
@@ -389,7 +389,7 @@ fh_pack_list <- data_filter_counter(fh_pitch_cpy,
                                     fh_valid_data_length, 
                                     valid_threshold)
 ##################################################################################################
-## Super Hot
+## 3.Super Hot
 f3 <- file.choose()
 sh_data <- read.csv(f3)
 valid_threshold <- 0.5
@@ -420,7 +420,7 @@ sh_pack_list <- data_filter_counter(sh_pitch_cpy,
 
 
 ##################################################################################################
-## EcoSphere dataset 1
+## 4.EcoSphere dataset 1
 ## Comment: the reason of seperate EcoSphere into two parts is,
 ##  I tried to watch two different videos in this app so I want
 ##  to analysis them seperately.
@@ -455,7 +455,7 @@ es1_pack_list <- data_filter_counter(es1_pitch_cpy,
                                     valid_threshold)
 
 ##################################################################################################
-## EcoSphere dataset 2
+## 5.EcoSphere dataset 2
 f5 <- file.choose()
 es2_data <- read.csv(f5)
 valid_threshold <- 0.5
@@ -484,7 +484,7 @@ es2_pack_list <- data_filter_counter(es2_pitch_cpy,
                                     valid_row, 
                                     es2_valid_data_length, 
                                     valid_threshold)
-
+##################################################################################################
 ## Test
 d1_test <- c(2,3,4,1,2,9)
 d2_test <- c(-2,-3,-5,-7,-9,1)
@@ -497,8 +497,8 @@ test_pack_list <- data_filter_counter(d1_test, d2_test, d3_test, valid_row_test,
                                       valid_length_test, valid_thres_test)
 
 ##################################################################################################
-
-## Plotting
+## PART 3: PLOTTING
+##################################################################################################
 
 ## TIME-BASED
 # Stacked bar chart
