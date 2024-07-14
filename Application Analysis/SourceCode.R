@@ -579,7 +579,7 @@ boxplot(list( bs_pack_list[[4]], fh_pack_list[[4]], sh_pack_list[[4]],
 
 ## 2.Bar Charts
 
-# 将数据组合到一个列表中
+# Put all the data into the list
 data_list <- list(
   Beat_Saber = list(Pitch = bs_pack_list[[2]], Yaw = bs_pack_list[[3]], Roll = bs_pack_list[[4]]),
   First_Hand = list(Pitch = fh_pack_list[[2]], Yaw = fh_pack_list[[3]], Roll = fh_pack_list[[4]]), 
@@ -588,7 +588,7 @@ data_list <- list(
   EcoSphere2 = list(Pitch = es2_pack_list[[2]], Yaw = es2_pack_list[[3]], Roll = es2_pack_list[[4]])
 )
 
-# 计算每组数据的最大值
+# Get the MAX result
 results <- data.frame(
   Application = character(),
   Direction = character(),
@@ -611,15 +611,17 @@ ggplot(results, aes(x = Application, y = Degree, fill = Direction)) +
        y = "Degree",
        fill = "Direction")
 
-for (i in 1:length(fh_pack_list[[4]])) {
-  if (fh_pack_list[[4]][i] >= 200) {
-    print(i)
-  }
-}
+## Debug Usage
+##for (i in 1:length(fh_pack_list[[4]])) {
+##  if (fh_pack_list[[4]][i] >= 200) {
+##    print(i)
+##  }
+##}
 
-i <- 4800
-while (i < length(fh_pack_list[[4]])) {
-  print(fh_pack_list[[4]][i])
-  i <- i + 1
-}
+## Debug Usage
+##i <- 4800
+##while (i < length(fh_pack_list[[4]])) {
+##  print(fh_pack_list[[4]][i])
+##  i <- i + 1
+##}
 
