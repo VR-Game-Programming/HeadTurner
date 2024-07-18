@@ -170,11 +170,11 @@ public class Manager1 : MonoBehaviour
                 if (DirectionList[count] == 90 || DirectionList[count] == 270) {
                     MaxViewingRange = Mathf.Abs(MaxViewingRange);
                 }
-                // turn right
+                // turn left
                 else if (DirectionList[count] > 90 || DirectionList[count] < 270) {
                     MaxViewingRange = MaxViewingRange < 0 ? Mathf.Abs(MaxViewingRange) : 360 - MaxViewingRange;
                 }
-                // turn left
+                // turn right
                 else {
                     MaxViewingRange = MaxViewingRange < 0 ? 360 + MaxViewingRange : MaxViewingRange;
                 }
