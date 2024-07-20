@@ -96,7 +96,7 @@ public class StarDataLoader {
 
     private float SetSize(short magnitude) {
       // Linear isn't factually accurate, but the effect is sufficient.
-      return 1 - Mathf.InverseLerp(-146, 796, magnitude);
+      return 1 - Mathf.InverseLerp(-146, 600, magnitude);
     }
   }
 
