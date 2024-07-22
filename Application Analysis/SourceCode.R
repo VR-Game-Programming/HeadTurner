@@ -88,7 +88,7 @@ while (i < vdl_temp) {
 }
 ##################################################################################################
 
-## PLAN 2 (Using)
+## PLAN 2 (Abandoned)
 ## Method description: Data Processing: The original dataset contains a large number of 
 ##  data points with angles exceeding 180 degrees, with many even approaching 
 ##  360 degrees. It is my judgment that these data points are likely measurements 
@@ -321,14 +321,432 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
   return(pack_list)
 }
 
+##################################################################################################
+## PLAN 3(Using)
+## Implementation:
+
+## count_same_trend counts the number of data in the same trend and
+##  determines the length and returns it.
+##count_same_trend <- function(data_list, idx, valid_length) {
+##  same_trend_num <- 0
+##  up_trend <- ifelse(data_list[[idx]] <= data_list[[idx + 1]], TRUE, FALSE)
+  
+##  while (idx < valid_length) {
+    ## Debug Usage
+    ##if (abs(data_list[idx + 1] - data_list[idx] > 180)) {
+    ##  print(paste("last idx:", idx + 1))
+    ##  print(paste("last val:", data_list[idx + 1]))
+    ##  print(paste("next idx:", idx))
+    ##  print(paste("next val:", data_list[idx]))
+    ##}
+##    if (up_trend && (data_list[[idx]] > data_list[[idx + 1]]) ||
+##        !up_trend && (data_list[[idx]] <= data_list[[idx + 1]])) {
+##      break
+##    } else {
+##      same_trend_num <- same_trend_num + 1
+##      idx <- idx + 1
+##    }
+##  }
+##  return(same_trend_num)
+##}
+
+## Count whether it is a valid head turn and return a list that includes 
+##  a boolean and the rotation angle.
+count_valid_rotation <- function(data_list, idx, threshold, valid_length) {
+  start_idx <- idx
+  data_sum <- 0
+  up_trend <- ifelse(data_list[[idx]] <= data_list[[idx + 1]], TRUE, FALSE)
+  ## rotation_data includes the data of:
+  ## 1) boolean of whether or not it is a valid rotation
+  ## 2) numeric of the angles it change
+  ## 3) integer of starting index of the change
+  ## 4) integer of end index of the change
+  rotation_data <- list(FALSE, 0, start_idx, 0)
+  
+  while (idx < valid_length) {
+    ## Debug Usage
+    ##if (abs(data_list[idx + 1] - data_list[idx] > 180)) {
+    ##  print(paste("last idx:", idx + 1))
+    ##  print(paste("last val:", data_list[idx + 1]))
+    ##  print(paste("next idx:", idx))
+    ##  print(paste("next val:", data_list[idx]))
+    ##}
+    if (up_trend && (data_list[[idx]] > data_list[[idx + 1]]) ||
+        !up_trend && (data_list[[idx]] <= data_list[[idx + 1]])) {
+      break
+    } else {
+      if (abs(data_list[[idx + 1]] - data_list[[idx]]) > 180) {
+        data_sum <- data_sum + 180 - abs(data_list[[idx]]) + 180 - abs(data_list[[idx + 1]])
+      }
+      else {
+        data_sum <- data_sum + abs(data_list[[idx + 1]] - data_list[[idx]])
+      }
+      idx <- idx + 1
+    }
+  }
+  if (data_sum > threshold) {
+    rotation_data[[1]] <- TRUE
+    rotation_data[[2]] <- data_sum
+  }
+  rotation_data[[4]] <- idx
+  return(rotation_data)
+}
+
+
+## handle_outliers deals with the data that's greater than 180 or smaller than -180,
+##  and returns the list contains pitch_vec, yaw_vec and roll_vec in this order.
+handle_outliers <- function(pitch_list, yaw_list, roll_list, valid_row, valid_length) {
+  
+  for (i in valid_row:valid_length) {
+    if (pitch_list[[i]] > 180) {
+      pitch_list[[i]] <- pitch_list[[i]] - 360
+    } else if (pitch_list[[i]] < -180) {
+      pitch_list[[i]] <- pitch_list[[i]] + 360
+    }
+    if (yaw_list[[i]] > 180) {
+      yaw_list[[i]] <- yaw_list[[i]] - 360
+    } else if (yaw_list[i] < -180) {
+      yaw_list[[i]] <- yaw_list[[i]] + 360
+    }
+    if (roll_list[[i]] > 180) {
+      roll_list[[i]] <- roll_list[[i]] - 360
+    } else if (roll_list[[i]] < -180) {
+      roll_list[[i]] <- roll_list[[i]] + 360
+    }
+  } 
+  cpy_list <- list(pitch_list, yaw_list, roll_list)
+  return(cpy_list)
+}
+
+rotation_counter <- function(is_pitch_turned, is_yaw_turned, is_roll_turned, data_count) {
+  ## 1 for pitch; 2 for yaw; 3 for roll; 
+  ## 4 for pitch + yaw; 5 for pitch + roll;
+  ## 6 for yaw + roll; 7 for pitch + yaw + roll
+  ## 8 for no motion
+  if (is_pitch_turned || is_yaw_turned || is_roll_turned) {
+    if (is_pitch_turned && is_yaw_turned && is_roll_turned) {
+      data_count[[7]] <- data_count[[7]] + 1
+    }
+    else if (is_pitch_turned && is_yaw_turned) {
+      data_count[[4]] <- data_count[[4]] + 1
+    }
+    else if (is_pitch_turned && is_roll_turned) {
+      data_count[[5]] <- data_count[[5]] + 1
+    }
+    else if (is_yaw_turned && is_roll_turned) {
+      data_count[[6]] <- data_count[[6]] + 1
+    }
+    else if (is_pitch_turned) {
+      data_count[[1]] <- data_count[[1]] + 1
+    }
+    else if (is_yaw_turned) {
+      data_count[[2]] <- data_count[[2]] + 1
+    }
+    else {
+      data_count[[3]] <- data_count[[3]] + 1
+    }
+  }
+  else {
+    data_count[[8]] <- data_count[[8]] + 1
+  }
+  return(data_count)
+}
+
+##split_and_count <- function(raw_data, start_idx, split_idx, end_idx, threshold) {
+##  first_half <- raw_data[start:split_idx]
+##  last_half <- raw_data[split_index:end_idx]
+  
+  ## count_valid_rotation <- function(data_list, idx, threshold, valid_length) 
+##  first_half_result <- count_valid_rotation(first_half, start_idx, threshold, split_idx)
+##  last_half_result <- count_valid_rotation(last_half, split_idx, end_idx)
+##  result_vec <- c(first_half_result, last_half_result)
+##  return(result_vec)
+##}
+
+
+## data_filter_counter Function: This function will count the combinations 
+##  of rotations in the pitch, yaw, and roll directions, compiling them into 
+##  the data_count vector. It will also record the angle changes of each valid 
+##  head turn into the corresponding filtered vector. The function ultimately 
+##  returns a list containing the four pieces of information described below:
+
+##  index 1 contains a vector that includes the counting results
+##  of different head rotation combinations;
+##  index 2 contains the vector of filtered pitch data;
+##  index 3 contains the vector of filtered yaw data;
+##  index 4 contains the vector of filtered roll data;
+data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec, 
+                                current_idx, valid_length, 
+                                valid_threshold) {
+  data_count <- list(0, 0, 0, 0, 0 ,0 ,0, 0)
+  
+  ## turning_data contains all the rotation angle data.
+  pitch_turning_data <- list()
+  yaw_turning_data <- list()
+  roll_turning_data <- list()
+  
+  ## filtered_data contains all the valid rotation angle data.
+  pitch_filtered_data <- list()
+  yaw_filtered_data <- list()
+  roll_filtered_data <- list()
+  
+  pitch_data_list <- list()
+  yaw_data_list <- list()
+  roll_data_list <- list()
+  
+  current_pitch_idx <- current_idx
+  current_yaw_idx <- current_idx
+  current_roll_idx <- current_idx
+  
+
+  for (i in 1:valid_length) {
+    pitch_data_list <- append(pitch_data_list, pitch_data_vec[i])
+    yaw_data_list <- append(yaw_data_list, yaw_data_vec[i])
+    roll_data_list <- append(roll_data_list, roll_data_vec[i])
+  }
+  ## Handle the absolute angles > 180 degrees to the corrected range
+  tempt_list <- handle_outliers(pitch_data_list, yaw_data_list, roll_data_list, 
+                              current_idx, valid_length)
+  pitch_data_list <- tempt_list[[1]]
+  yaw_data_list <- tempt_list[[2]]
+  roll_data_list <- tempt_list[[3]]
+  
+  
+  tempt_idx <- current_idx
+  while (tempt_idx < valid_length) {
+    new_data <- count_valid_rotation(pitch_data_list, tempt_idx, valid_threshold, valid_length)
+    pitch_turning_data <- append(pitch_turning_data, list(new_data))
+    
+    tempt_idx <- new_data[[4]]
+  }
+  
+  tempt_idx <- current_idx
+  while (tempt_idx < valid_length) {
+    new_data <- count_valid_rotation(yaw_data_list, tempt_idx, valid_threshold, valid_length)
+    yaw_turning_data <- append(yaw_turning_data, list(new_data))
+    
+    tempt_idx <- new_data[[4]]
+  }
+  
+  tempt_idx <- current_idx
+  while (tempt_idx < valid_length) {
+    new_data <- count_valid_rotation(roll_data_list, tempt_idx, valid_threshold, valid_length)
+    roll_turning_data <- append(roll_turning_data, list(new_data))
+    
+    tempt_idx <- new_data[[4]]
+  }
+  print(pitch_turning_data)
+  print(yaw_turning_data)
+  print(roll_turning_data)
+  ###############################################################
+  
+  max_idx <- max(pitch_turning_data[[1]][[4]], yaw_turning_data[[1]][[4]], roll_turning_data[[1]][[4]])
+  min_idx <- min(pitch_turning_data[[1]][[4]], yaw_turning_data[[1]][[4]], roll_turning_data[[1]][[4]])
+  last_round <- FALSE
+  while (max_idx <= valid_length) {
+    tempt_bool_pitch <- FALSE
+    tempt_bool_yaw <- FALSE
+    tempt_bool_roll <- FALSE
+    if (max_idx == min_idx) {
+      if (pitch_turning_data[[1]][[1]]) {
+        tempt_bool_pitch <- TRUE
+        pitch_filtered_data <- append(pitch_filtered_data, pitch_turning_data[[1]][[2]])
+      }
+      if (yaw_turning_data[[1]][[1]]) {
+        tempt_bool_yaw <- TRUE
+        yaw_filtered_data <- append(yaw_filtered_data, yaw_turning_data[[1]][[2]])
+      }
+      if (roll_turning_data[[1]][[1]]) {
+        tempt_bool_roll <- TRUE
+        roll_filtered_data <- append(roll_filtered_data, roll_turning_data[[1]][[2]])
+      }
+      current_pitch_idx <- min_idx
+      current_yaw_idx <- min_idx
+      current_roll_idx <- min_idx
+      
+      pitch_turning_data <- pitch_turning_data[-1]
+      yaw_turning_data <- yaw_turning_data[-1]
+      roll_turning_data <- roll_turning_data[-1]
+    }
+    else {
+      ## smallest_list contains the direction with the smallest ending index.
+      smallest_list <- list()
+      larger_list <- list()
+      
+      ## data_list contains the original raw data.
+      smallest_data_list <- list()
+      larger_data_list <- list()
+      
+      if (pitch_turning_data[[1]][[4]] > min_idx) {
+        larger_list$pitch <- pitch_turning_data
+        larger_data_list$pitch <- pitch_data_list
+      } 
+      else if (pitch_turning_data[[1]][[4]] == min_idx) {
+        smallest_list$pitch <- pitch_turning_data
+        smallest_data_list$pitch <- pitch_data_list
+      }
+      if (yaw_turning_data[[1]][[4]] > min_idx) {
+        larger_list$yaw <- yaw_turning_data
+        larger_data_list$yaw <- yaw_data_list
+      }
+      else if (yaw_turning_data[[1]][[4]] == min_idx) {
+        smallest_list$yaw <- yaw_turning_data
+        smallest_data_list$yaw <- yaw_data_list
+      }
+      if (roll_turning_data[[1]][[4]] > min_idx) {
+        larger_list$roll <- roll_turning_data
+        larger_data_list$roll <- roll_data_list
+      }
+      else if (roll_turning_data[[1]][[4]] == min_idx) {
+        smallest_list$roll <- roll_turning_data
+        smallest_data_list$roll <- roll_data_list
+      }
+      
+      for (i in 1:length(smallest_list)) {
+        if (smallest_list[[i]][[1]][[1]]) {
+          if (names(smallest_data_list)[i] == "pitch") {
+            print("counting smaller pitch")
+            tempt_bool_pitch <- TRUE
+            pitch_filtered_data <- append(pitch_filtered_data, pitch_turning_data[[1]][[2]])
+            current_pitch_idx <- min_idx
+            smallest_list[[i]] <- smallest_list[[i]][-1]
+            pitch_turning_data <- smallest_list[[i]]
+          }
+          else if (names(smallest_data_list)[i] == "yaw") {
+            print("counting smaller yaw")
+            tempt_bool_yaw <- TRUE
+            yaw_filtered_data <- append(yaw_filtered_data, yaw_turning_data[[1]][[2]])
+            current_yaw_idx <- min_idx
+            smallest_list[[i]] <- smallest_list[[i]][-1]
+            yaw_turning_data <- smallest_list[[i]]
+          }
+          else if (names(smallest_data_list)[i] == "roll") {
+            print("counting smaller roll")
+            tempt_bool_roll <- TRUE
+            roll_filtered_data <- append(roll_filtered_data, roll_turning_data[[1]][[2]])
+            current_roll_idx <- min_idx
+            smallest_list[[i]] <- smallest_list[[i]][-1]
+            roll_turning_data <- smallest_list[[i]]
+          }
+
+        }
+        else {
+          if (names(smallest_data_list)[i] == "pitch") {
+            print("counting smaller pitch")
+            current_pitch_idx <- min_idx
+            smallest_list[[i]] <- smallest_list[[i]][-1]
+            pitch_turning_data <- smallest_list[[i]]
+          }
+          else if (names(smallest_data_list)[i] == "yaw") {
+            print("counting smaller yaw")
+            current_yaw_idx <- min_idx
+            smallest_list[[i]] <- smallest_list[[i]][-1]
+            yaw_turning_data <- smallest_list[[i]]
+          }
+          else if (names(smallest_data_list)[i] == "roll") {
+            print("counting smaller roll")
+            current_roll_idx <- min_idx
+            smallest_list[[i]] <- smallest_list[[i]][-1]
+            roll_turning_data <- smallest_list[[i]]            
+          }
+        }
+      }
+      
+      
+      for (j in 1:length(larger_list)) {
+        ## count_valid_rotation <- function(data_list, idx, threshold, valid_length)
+        ## rotation_data includes the data of:
+        ## 1) boolean of whether or not it is a valid rotation
+        ## 2) numeric of the angles it change
+        ## 3) integer of starting index of the change
+        ## 4) integer of end index of the change
+        
+        if (names(larger_data_list)[j] == "pitch") {
+          tempt_rotation_result <- count_valid_rotation(larger_data_list[[j]], 
+                                                        current_pitch_idx,
+                                                        valid_threshold, 
+                                                        min_idx)
+          print("counting larger pitch")
+          if (tempt_rotation_result[[1]]) {
+            
+            tempt_bool_pitch <- TRUE
+            pitch_filtered_data <- append(pitch_filtered_data, tempt_rotation_result[[2]])
+            pitch_turning_data[[1]] <- count_valid_rotation(larger_data_list[[j]], 
+                                                            min_idx,
+                                                            valid_threshold,
+                                                            larger_list[[j]][[1]][[4]])
+            current_pitch_idx <- min_idx
+          }
+        }
+
+        else if (names(larger_data_list)[j] == "yaw") {
+          tempt_rotation_result <- count_valid_rotation(larger_data_list[[j]], 
+                                                        current_yaw_idx,
+                                                        valid_threshold, 
+                                                        min_idx)
+          print("counting larger yaw")
+          if (tempt_rotation_result[[1]]) {
+            tempt_bool_yaw <- TRUE
+            yaw_filtered_data <- append(yaw_filtered_data, tempt_rotation_result[[2]])
+            yaw_turning_data[[1]] <- count_valid_rotation(larger_data_list[[j]], 
+                                                          min_idx,
+                                                          valid_threshold,
+                                                          larger_list[[j]][[1]][[4]])
+            current_yaw_idx <- min_idx
+          }
+            
+        }
+        else if (names(larger_data_list)[j] == "roll") {
+          tempt_rotation_result <- count_valid_rotation(larger_data_list[[j]], 
+                                                        current_roll_idx,
+                                                        valid_threshold, 
+                                                        min_idx)
+          print("counting larger roll")
+          if (tempt_rotation_result[[1]]) {
+            tempt_bool_roll <- TRUE
+            roll_filtered_data <- append(roll_filtered_data, tempt_rotation_result[[2]])
+            roll_turning_data[[1]] <- count_valid_rotation(larger_data_list[[j]], 
+                                                           min_idx,
+                                                           valid_threshold,
+                                                           larger_list[[j]][[1]][[4]])
+            current_roll_idx <- min_idx
+          }
+        }
+      }
+      
+    }
+
+    data_count <- rotation_counter(tempt_bool_pitch, tempt_bool_yaw, 
+                                   tempt_bool_roll, data_count)
+    print(data_count)
+    if (last_round) break
+    
+    max_idx <- max(pitch_turning_data[[1]][[4]], yaw_turning_data[[1]][[4]], roll_turning_data[[1]][[4]])
+    min_idx <- min(pitch_turning_data[[1]][[4]], yaw_turning_data[[1]][[4]], roll_turning_data[[1]][[4]])
+    ##print(paste("max_idx:", max_idx))
+    ##print(paste("min_idx:", min_idx))
+    if (min_idx == valid_length) {
+      last_round <- TRUE
+    }
+  }
+  ## Debug Usage
+  ##if (any(abs(pitch_filtered_data) > 180) || 
+  ##    any(abs(yaw_filtered_data) > 180) || 
+  ##    any(abs(roll_filtered_data) > 180)) {
+  ##  stop("Data still contains values exceeding 180 degrees after handling outliers. Back")
+  ##}
+  pack_list <- list(data_count, pitch_filtered_data, yaw_filtered_data, roll_filtered_data)
+  return(pack_list)
+}
+
 
 ##################################################################################################
-## PART 2: INSTANCE ANALYSIS
+## PART 2: ANALYSIS
 ##################################################################################################
 
 ## APPs Names
-##################################
-## 1.Beat Saber
+
+## Beat Saber
 
 ## Initialize data
 ## Open our file (it should strictly align with our code, 
@@ -361,7 +779,7 @@ bs_pack_list <- data_filter_counter(bs_pitch_cpy,
                                     bs_valid_data_length, 
                                     valid_threshold)
 ##################################################################################################
-## 2.First Hand
+## First Hand
 f2 <- file.choose()
 fh_data <- read.csv(f2)
 valid_threshold <- 0.5
@@ -389,7 +807,7 @@ fh_pack_list <- data_filter_counter(fh_pitch_cpy,
                                     fh_valid_data_length, 
                                     valid_threshold)
 ##################################################################################################
-## 3.Super Hot
+## Super Hot
 f3 <- file.choose()
 sh_data <- read.csv(f3)
 valid_threshold <- 0.5
@@ -418,9 +836,8 @@ sh_pack_list <- data_filter_counter(sh_pitch_cpy,
                                     sh_valid_data_length, 
                                     valid_threshold)
 
-
 ##################################################################################################
-## 4.EcoSphere dataset 1
+## EcoSphere dataset 1
 ## Comment: the reason of seperate EcoSphere into two parts is,
 ##  I tried to watch two different videos in this app so I want
 ##  to analysis them seperately.
@@ -455,7 +872,7 @@ es1_pack_list <- data_filter_counter(es1_pitch_cpy,
                                     valid_threshold)
 
 ##################################################################################################
-## 5.EcoSphere dataset 2
+## EcoSphere dataset 2
 f5 <- file.choose()
 es2_data <- read.csv(f5)
 valid_threshold <- 0.5
@@ -484,7 +901,7 @@ es2_pack_list <- data_filter_counter(es2_pitch_cpy,
                                     valid_row, 
                                     es2_valid_data_length, 
                                     valid_threshold)
-##################################################################################################
+
 ## Test
 d1_test <- c(2,3,4,1,2,9)
 d2_test <- c(-2,-3,-5,-7,-9,1)
@@ -497,8 +914,8 @@ test_pack_list <- data_filter_counter(d1_test, d2_test, d3_test, valid_row_test,
                                       valid_length_test, valid_thres_test)
 
 ##################################################################################################
-## PART 3: PLOTTING
-##################################################################################################
+
+## Plotting
 
 ## TIME-BASED
 # Stacked bar chart
@@ -579,7 +996,7 @@ boxplot(list( bs_pack_list[[4]], fh_pack_list[[4]], sh_pack_list[[4]],
 
 ## 2.Bar Charts
 
-# Put all the data into the list
+# 将数据组合到一个列表中
 data_list <- list(
   Beat_Saber = list(Pitch = bs_pack_list[[2]], Yaw = bs_pack_list[[3]], Roll = bs_pack_list[[4]]),
   First_Hand = list(Pitch = fh_pack_list[[2]], Yaw = fh_pack_list[[3]], Roll = fh_pack_list[[4]]), 
@@ -588,7 +1005,7 @@ data_list <- list(
   EcoSphere2 = list(Pitch = es2_pack_list[[2]], Yaw = es2_pack_list[[3]], Roll = es2_pack_list[[4]])
 )
 
-# Get the MAX result
+# 计算每组数据的最大值
 results <- data.frame(
   Application = character(),
   Direction = character(),
@@ -611,17 +1028,19 @@ ggplot(results, aes(x = Application, y = Degree, fill = Direction)) +
        y = "Degree",
        fill = "Direction")
 
-## Debug Usage
-##for (i in 1:length(fh_pack_list[[4]])) {
-##  if (fh_pack_list[[4]][i] >= 200) {
-##    print(i)
-##  }
-##}
+for (i in 1:length(fh_pack_list[[4]])) {
+  if (fh_pack_list[[4]][i] >= 200) {
+    print(i)
+  }
+}
 
-## Debug Usage
-##i <- 4800
-##while (i < length(fh_pack_list[[4]])) {
-##  print(fh_pack_list[[4]][i])
-##  i <- i + 1
-##}
+i <- 4800
+while (i < length(fh_pack_list[[4]])) {
+  print(fh_pack_list[[4]][i])
+  i <- i + 1
+}
+
+
+
+
 
