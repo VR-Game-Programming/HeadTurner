@@ -499,10 +499,10 @@ MonoBehaviour:
   Message: {fileID: 1190142452}
   Cam: {fileID: 892931418}
   Viewport: {fileID: 110278254}
-  ParticipantID: 16
+  ParticipantID: -1
   Posture: 1
   enableTrunk: 1
-  enableEmg: 1
+  enableEmg: 0
   MaterialsFolder: Materials
   ResultFolder: Result
 --- !u!1 &535775233 stripped
