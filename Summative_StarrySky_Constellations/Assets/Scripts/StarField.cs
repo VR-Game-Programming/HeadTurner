@@ -11,6 +11,7 @@ public class StarField : MonoBehaviour {
     private Dictionary<int, GameObject> constellationVisible = new();
 
     private readonly int starFieldScale = 400;
+    public Material StarMaterial;
     public bool Orion_0, Monceros_1, Gemini_2, Cancer_3, Leo_4, LeoMinor_5, Lynx_6, UrsaMajor_7, BigDipper_8,
                 SmallBear_9, Swan_10, Cassiopeia_11, FlyHorse_12, Dragon_13, NorthHat_14, Hercules_15, Hound_16,
                 Coma_17, Bootes_18;
@@ -34,24 +35,28 @@ public class StarField : MonoBehaviour {
             stargo.transform.LookAt(transform.position);
             stargo.transform.Rotate(0, 180, 0);
             //stargo.AddComponent<MouseHover>();
+            //stargo.GetComponent<MeshRenderer>().material = StarMaterial;
             Material material = stargo.GetComponent<MeshRenderer>().material;
             material.shader = Shader.Find("Unlit/StarShader");
             material.SetFloat("_Size", Mathf.Lerp(starSizeMin, starSizeMax, star.size));
             material.color = star.colour;
+            //material.EnableKeyword("_EMISSION");
+            //material.SetColor("_EmissionColor", star.colour);
+            //stargo.transform.localScale =new Vector3( Mathf.Lerp(starSizeMin, starSizeMax, star.size), Mathf.Lerp(starSizeMin, starSizeMax, star.size), Mathf.Lerp(starSizeMin, starSizeMax, star.size));
             starObjects.Add(stargo);
         }
     }
 
     // Could also do in Update with Time.deltatime scaling.
-    private void FixedUpdate()
-    {
-        if (Input.GetKey(KeyCode.Mouse1))
-        {
-            Camera.main.transform.RotateAround(Camera.main.transform.position, Camera.main.transform.right, Input.GetAxis("Mouse Y"));
-            Camera.main.transform.RotateAround(Camera.main.transform.position, Vector3.up, -Input.GetAxis("Mouse X"));
-        }
-        return;
-    }
+    //private void FixedUpdate()
+    //{
+    //    if (Input.GetKey(KeyCode.Mouse1))
+    //    {
+    //        Camera.main.transform.RotateAround(Camera.main.transform.position, Camera.main.transform.right, Input.GetAxis("Mouse Y"));
+    //        Camera.main.transform.RotateAround(Camera.main.transform.position, Vector3.up, -Input.GetAxis("Mouse X"));
+    //    }
+    //    return;
+    //}
 
     private void OnValidate()
     {
