@@ -5,30 +5,19 @@ using UnityEngine;
 public class PauseAnimation : MonoBehaviour
 {
     // Start is called before the first frame update
-    public Animator stars;
-    public bool pause=false, play=false;
-    void Start()
-    {
-        
-    }
+    //public Animator stars;
+    public bool pause = false, touch = false;
 
     // Update is called once per frame
     void Update()
     {
-        if (pause)
+        Debug.Log(pause);
+        if (pause && touch==false)
         {
             Time.timeScale = 0;
+            touch=true;
             pause = false;
-        }
-        if (play)
-        {
-            Time.timeScale = 1;
-            play = false;
-        }
-        if (Input.GetKey(KeyCode.Mouse1))
-        {
-            Camera.main.transform.RotateAround(Camera.main.transform.position, Camera.main.transform.right, Input.GetAxis("Mouse Y"));
-            Camera.main.transform.RotateAround(Camera.main.transform.position, Vector3.up, -Input.GetAxis("Mouse X"));
+            
         }
     }
 }

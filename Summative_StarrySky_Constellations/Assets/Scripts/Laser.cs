@@ -7,6 +7,7 @@ public class Laser : MonoBehaviour
     // Start is called before the first frame update
 
     LineRenderer line;
+    public bool RayVisible;
 
     void Start()
     {
@@ -21,12 +22,14 @@ public class Laser : MonoBehaviour
         line.SetPosition(0, ray.origin);
         if (Physics.Raycast(ray, out hit, 1000,1<<6))
         {
-            line.SetPosition(1, hit.point);
+          
+            line.SetPosition(1, hit.point);      
+            hit.transform.gameObject.GetComponent<hit>().HitByRay();
             Debug.Log(hit.transform.gameObject.name);
         }
         else
         {
-            line.SetPosition(1, ray.GetPoint(1000));
+            line.SetPosition(1, ray.GetPoint(1000));         
         }
     }
 }

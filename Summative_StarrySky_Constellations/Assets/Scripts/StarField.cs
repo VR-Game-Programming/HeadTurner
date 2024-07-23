@@ -193,6 +193,11 @@ public class StarField : MonoBehaviour {
                 ToggleConstellation(i);
             }
         }
+        if (Input.GetKey(KeyCode.Mouse1))
+        {
+            Camera.main.transform.RotateAround(Camera.main.transform.position, Camera.main.transform.right, Input.GetAxis("Mouse Y"));
+            Camera.main.transform.RotateAround(Camera.main.transform.position, Vector3.up, -Input.GetAxis("Mouse X"));
+        }
         ///Orion_0
         if (Orion_0 && set_0 % 2 != 0)
         {
