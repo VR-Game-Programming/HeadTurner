@@ -13,7 +13,7 @@
 
 
 ##################################################################################################
-## PART 1: ANALYSIS METHODS
+## PART 1: ANALYSIS OF DATA
 ##################################################################################################
 
 ## PLAN 1 (abandoned, so not complete)
@@ -86,6 +86,7 @@ while (i < vdl_temp) {
   }
     i <- i + 1
 }
+
 ##################################################################################################
 
 ## PLAN 2 (Abandoned)
@@ -124,16 +125,23 @@ while (i < vdl_temp) {
 
 ## Implementation:
 
-## count_same_trend counts the number of increments in a section determines 
-##  how many data points will be counted and returns the length.
+## count_same_trend counts the number of data in the same trend and
+##  determines the length and returns it.
 count_same_trend <- function(data_vec, idx, valid_length) {
   same_trend_num <- 0
-  trend <- ifelse(data_vec[idx + 1] - data_vec[idx] >= 0, 1, -1)
+  up_trend <- ifelse(data_vec[idx] <= data_vec[idx + 1], TRUE, FALSE)
   
   while (idx < valid_length) {
-    
-    if ((data_vec[idx + 1] - data_vec[idx]) * trend < 0) {
-      return(same_trend_num)
+    ## Debug Usage
+    ##if (abs(data_vec[idx + 1] - data_vec[idx] > 180)) {
+    ##  print(paste("last idx:", idx + 1))
+    ##  print(paste("last val:", data_vec[idx + 1]))
+    ##  print(paste("next idx:", idx))
+    ##  print(paste("next val:", data_vec[idx]))
+    ##}
+    if (up_trend && (data_vec[idx] > data_vec[idx + 1]) ||
+        !up_trend && (data_vec[idx] <= data_vec[idx + 1])) {
+      break
     } else {
       same_trend_num <- same_trend_num + 1
       idx <- idx + 1
@@ -146,8 +154,8 @@ count_same_trend <- function(data_vec, idx, valid_length) {
 ##  a boolean and the rotation angle.
 check_valid_rotation <- function(data_vec, idx, threshold, valid_length) {
   data_sum <- 0
-  trend <- ifelse(data_vec[idx] >= 0, 1, -1)
-  rotation_data <- list(F, 0)
+  up_trend <- ifelse(data_vec[idx] <= data_vec[idx + 1], TRUE, FALSE)
+  rotation_data <- list(FALSE, 0)
   while (idx < valid_length) {
     ## Debug Usage
     ##if (abs(data_vec[idx + 1] - data_vec[idx] > 180)) {
@@ -156,21 +164,23 @@ check_valid_rotation <- function(data_vec, idx, threshold, valid_length) {
     ##  print(paste("next idx:", idx))
     ##  print(paste("next val:", data_vec[idx]))
     ##}
-    if (((data_vec[idx + 1] - data_vec[idx]) * trend) < 0) {
+    if (up_trend && (data_vec[idx] > data_vec[idx + 1]) ||
+        !up_trend && (data_vec[idx] <= data_vec[idx + 1])) {
       break
     } else {
-      data_sum <- data_sum + abs(data_vec[idx + 1] - data_vec[idx])
+      if (abs(data_vec[idx + 1] - data_vec[idx]) > 180) {
+        data_sum <- data_sum + 180 - abs(data_vec[idx]) + 180 - abs(data_vec[idx + 1])
+      }
+      else {
+        data_sum <- data_sum + abs(data_vec[idx + 1] - data_vec[idx])
+      }
       idx <- idx + 1
     }
   }
-  ## Debug Usage
-  ##if (data_sum > threshold) {
-  ##  rotation_data[[1]] <- T
-  ##  rotation_data[[2]] <- data_sum
-  ##  if (data_sum > 180) {
-  ##    print("Error")
-  ##  }
-  ##}
+  if (data_sum > threshold) {
+    rotation_data[[1]] <- TRUE
+    rotation_data[[2]] <- data_sum
+  }
   return(rotation_data)
 }
 
@@ -271,7 +281,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
     ## 4 for pitch + yaw; 5 for pitch + roll;
     ## 6 for yaw + roll; 7 for pitch + yaw + roll
     ## 8 for no motion
-    if (pitch_turned[[1]] | yaw_turned[[1]] | roll_turned[[1]]) {
+    if (pitch_turned[[1]] || yaw_turned[[1]] || roll_turned[[1]]) {
       if (pitch_turned[[1]] && yaw_turned[[1]] && roll_turned[[1]]) {
         data_count[7] <- data_count[7] + 1
         pitch_filtered_data <- c(pitch_filtered_data, pitch_turned[[2]])
@@ -321,8 +331,62 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
   return(pack_list)
 }
 
+
 ##################################################################################################
-## PLAN 3(Using)
+
+## PLAN 3 (Using)
+## Method description: Data Processing: The original dataset contains a large number of 
+##  data points with angles exceeding 180 degrees, with many even approaching 
+##  360 degrees. It is my judgment that these data points are likely measurements 
+##  from the negative coordinate axis by OptiTrack. This is because, under normal 
+##  circumstances, the range for pitch, yaw, and roll should be between -180 and 180 
+##  degrees. Therefore, the first step is to process the data such that any value 
+##  exceeding 180 degrees is reduced by 360 degrees to obtain the correct rotational 
+##  coordinate angle.
+## The most crucial aspect is determining what constitutes a head turn. 
+##  We have adopted the threshold defined by OptiTrack Prime^x 13, which 
+##  indicates that each measurement may have a maximum error of 0.5 degrees. 
+##  If a segment of data changes its trend (i.e., the sign of the difference 
+##  between consecutive data points changes), we compare this segment to the 
+##  threshold. If the change exceeds the threshold, it is considered a valid 
+##  head turn. Therefore, the starting point of a head turn is the first value, 
+##  and the ending point is when the sign of the value changes. But we can also
+##  change the threshold depends on the real data results.
+## This description pertains to determining rotation in a single direction. 
+##  When considering combinations of rotations in the pitch, yaw, and roll directions, 
+##  we need to determine the minimum change across the three directions and identify 
+##  which directions' movements are valid within this smallest segment. There are eight 
+##  possible combinations:
+## 1. Pure pitch
+## 2. Pure roll
+## 3. Pure yaw
+## 4. Pitch + roll
+## 5. Pitch + yaw
+## 6. Roll + yaw
+## 7. Pitch + yaw + roll
+## 8. No motion
+
+## These eight combinations are recorded in the data_count vector.
+##  Whenever a movement is determined to fall under any of these categories,
+##  the angle change is recorded into the corresponding filtered vector.
+##  The differences between this, plan 3, and plan 2 are:
+## In plan 2, we directly choose the smallest change as the base,
+##  and cut the larger changes to do the same comparison as the
+##  smallest change. This causes a problem if we move our head
+##  at a slower rate than a shorter but faster rotation in another
+##  direction. The previous rotation might be counted as "no motion,"
+##  leading to miscounting problems.
+## In this plan, we divide the smallest changes and the larger
+##  changes, and we determine the change with the smallest ending
+##  index as the smallest change. Each time we find the shortest movement,
+##  we check whether or not it is a valid motion. If it is, we count it;
+##  if it is not, we delete it immediately.
+## Then, we go to the list with longer rotations. If it is a valid rotation
+##  with the given ending index, which is the shortest change's index,
+##  we count it. Unlike how we deal with the shortest change, we don't
+##  delete it if it isn't a valid rotation. Instead, we keep it until it becomes
+##  the shortest change.
+
 ## Implementation:
 
 ## count_same_trend counts the number of data in the same trend and
@@ -350,8 +414,8 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
 ##  return(same_trend_num)
 ##}
 
-## Count whether it is a valid head turn and return a list that includes 
-##  a boolean and the rotation angle.
+## count_valid_rotation counts whether it is a valid head turn
+##   and return a list that includes a boolean and the rotation angle.
 count_valid_rotation <- function(data_list, idx, threshold, valid_length) {
   start_idx <- idx
   data_sum <- 0
@@ -498,7 +562,6 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
   current_yaw_idx <- current_idx
   current_roll_idx <- current_idx
   
-
   for (i in 1:valid_length) {
     pitch_data_list <- append(pitch_data_list, pitch_data_vec[i])
     yaw_data_list <- append(yaw_data_list, yaw_data_vec[i])
@@ -535,10 +598,9 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
     
     tempt_idx <- new_data[[4]]
   }
-  print(pitch_turning_data)
-  print(yaw_turning_data)
-  print(roll_turning_data)
-  ###############################################################
+  ##print(pitch_turning_data)
+  ##print(yaw_turning_data)
+  ##print(roll_turning_data)
   
   max_idx <- max(pitch_turning_data[[1]][[4]], yaw_turning_data[[1]][[4]], roll_turning_data[[1]][[4]])
   min_idx <- min(pitch_turning_data[[1]][[4]], yaw_turning_data[[1]][[4]], roll_turning_data[[1]][[4]])
@@ -605,7 +667,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
       for (i in 1:length(smallest_list)) {
         if (smallest_list[[i]][[1]][[1]]) {
           if (names(smallest_data_list)[i] == "pitch") {
-            print("counting smaller pitch")
+            ##print("counting smaller pitch")
             tempt_bool_pitch <- TRUE
             pitch_filtered_data <- append(pitch_filtered_data, pitch_turning_data[[1]][[2]])
             current_pitch_idx <- min_idx
@@ -613,7 +675,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
             pitch_turning_data <- smallest_list[[i]]
           }
           else if (names(smallest_data_list)[i] == "yaw") {
-            print("counting smaller yaw")
+            ##print("counting smaller yaw")
             tempt_bool_yaw <- TRUE
             yaw_filtered_data <- append(yaw_filtered_data, yaw_turning_data[[1]][[2]])
             current_yaw_idx <- min_idx
@@ -621,7 +683,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
             yaw_turning_data <- smallest_list[[i]]
           }
           else if (names(smallest_data_list)[i] == "roll") {
-            print("counting smaller roll")
+            ##print("counting smaller roll")
             tempt_bool_roll <- TRUE
             roll_filtered_data <- append(roll_filtered_data, roll_turning_data[[1]][[2]])
             current_roll_idx <- min_idx
@@ -632,19 +694,19 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
         }
         else {
           if (names(smallest_data_list)[i] == "pitch") {
-            print("counting smaller pitch")
+            ##print("counting smaller pitch")
             current_pitch_idx <- min_idx
             smallest_list[[i]] <- smallest_list[[i]][-1]
             pitch_turning_data <- smallest_list[[i]]
           }
           else if (names(smallest_data_list)[i] == "yaw") {
-            print("counting smaller yaw")
+            ##print("counting smaller yaw")
             current_yaw_idx <- min_idx
             smallest_list[[i]] <- smallest_list[[i]][-1]
             yaw_turning_data <- smallest_list[[i]]
           }
           else if (names(smallest_data_list)[i] == "roll") {
-            print("counting smaller roll")
+            ##print("counting smaller roll")
             current_roll_idx <- min_idx
             smallest_list[[i]] <- smallest_list[[i]][-1]
             roll_turning_data <- smallest_list[[i]]            
@@ -652,7 +714,9 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
         }
       }
       
-      
+      ## We split the rotation with the same ending index as the smallest
+      ##  change, and determine whether or not it is , or it is still a 
+      ##  valid rotation, if it is, we split it, if it is not, we keep it.
       for (j in 1:length(larger_list)) {
         ## count_valid_rotation <- function(data_list, idx, threshold, valid_length)
         ## rotation_data includes the data of:
@@ -666,7 +730,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
                                                         current_pitch_idx,
                                                         valid_threshold, 
                                                         min_idx)
-          print("counting larger pitch")
+          ##print("counting larger pitch")
           if (tempt_rotation_result[[1]]) {
             
             tempt_bool_pitch <- TRUE
@@ -684,7 +748,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
                                                         current_yaw_idx,
                                                         valid_threshold, 
                                                         min_idx)
-          print("counting larger yaw")
+          ##print("counting larger yaw")
           if (tempt_rotation_result[[1]]) {
             tempt_bool_yaw <- TRUE
             yaw_filtered_data <- append(yaw_filtered_data, tempt_rotation_result[[2]])
@@ -701,7 +765,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
                                                         current_roll_idx,
                                                         valid_threshold, 
                                                         min_idx)
-          print("counting larger roll")
+          ##print("counting larger roll")
           if (tempt_rotation_result[[1]]) {
             tempt_bool_roll <- TRUE
             roll_filtered_data <- append(roll_filtered_data, tempt_rotation_result[[2]])
@@ -718,7 +782,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
 
     data_count <- rotation_counter(tempt_bool_pitch, tempt_bool_yaw, 
                                    tempt_bool_roll, data_count)
-    print(data_count)
+    ##print(data_count)
     if (last_round) break
     
     max_idx <- max(pitch_turning_data[[1]][[4]], yaw_turning_data[[1]][[4]], roll_turning_data[[1]][[4]])
@@ -1039,6 +1103,7 @@ while (i < length(fh_pack_list[[4]])) {
   print(fh_pack_list[[4]][i])
   i <- i + 1
 }
+
 
 
 
