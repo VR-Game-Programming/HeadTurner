@@ -15,10 +15,16 @@ public class hit : MonoBehaviour
         if (hitten==false)
         {
             Time.timeScale = 1;
-            //hitten = true;
+            hitten = true;
+            StartCoroutine(ChangeTouch());
             //pause.touch =false;
         }
          
+    }
+    private IEnumerator ChangeTouch()
+    {       
+        yield return new WaitForSeconds(2);
+        pause.touch = false;
     }
 
 }

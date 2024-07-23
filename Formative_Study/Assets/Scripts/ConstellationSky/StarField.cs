@@ -43,15 +43,15 @@ public class StarField : MonoBehaviour {
     }
 
     // Could also do in Update with Time.deltatime scaling.
-    private void FixedUpdate()
-    {
-        if (Input.GetKey(KeyCode.Mouse1))
-        {
-            Camera.main.transform.RotateAround(Camera.main.transform.position, Camera.main.transform.right, Input.GetAxis("Mouse Y"));
-            Camera.main.transform.RotateAround(Camera.main.transform.position, Vector3.up, -Input.GetAxis("Mouse X"));
-        }
-        return;
-    }
+    //private void FixedUpdate()
+    //{
+    //    if (Input.GetKey(KeyCode.Mouse1))
+    //    {
+    //        Camera.main.transform.RotateAround(Camera.main.transform.position, Camera.main.transform.right, Input.GetAxis("Mouse Y"));
+    //        Camera.main.transform.RotateAround(Camera.main.transform.position, Vector3.up, -Input.GetAxis("Mouse X"));
+    //    }
+    //    return;
+    //}
 
     private void OnValidate()
     {
@@ -181,12 +181,17 @@ public class StarField : MonoBehaviour {
     private void Update()
     {
         // Check for numeric presses and toggle the constellation highlighting.
-        for (int i = 0; i < 10; i++)
+        //for (int i = 0; i < 10; i++)
+        //{
+        //    if (Input.GetKeyDown(KeyCode.Alpha0 + i))
+        //    {
+        //        ToggleConstellation(i);
+        //    }
+        //}
+        if (Input.GetKey(KeyCode.Mouse1))
         {
-            if (Input.GetKeyDown(KeyCode.Alpha0 + i))
-            {
-                ToggleConstellation(i);
-            }
+            Camera.main.transform.RotateAround(Camera.main.transform.position, Camera.main.transform.right, Input.GetAxis("Mouse Y"));
+            Camera.main.transform.RotateAround(Camera.main.transform.position, Vector3.up, -Input.GetAxis("Mouse X"));
         }
         ///Orion_0
         if (Orion_0 && set_0 % 2 != 0)

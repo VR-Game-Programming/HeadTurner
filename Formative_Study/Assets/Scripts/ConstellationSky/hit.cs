@@ -4,19 +4,26 @@ using UnityEngine;
 
 public class hit : MonoBehaviour
 {
-    // Start is called before the first frame update
+    bool hitten = false;
+    PauseAnimation pause;
     void Start()
     {
-        
+        pause = GameObject.Find("ControlAnimation").GetComponent<PauseAnimation>();
     }
-
-    // Update is called once per frame
-    void Update()
+    public void HitByRay()
     {
-        
+        if (hitten == false)
+        {
+            Time.timeScale = 1;
+            hitten = true;
+            StartCoroutine(ChangeTouch());
+            //pause.touch =false;
+        }
+
     }
-    private void OnTriggerEnter(Collider other)
+    private IEnumerator ChangeTouch()
     {
-
+        yield return new WaitForSeconds(2);
+        pause.touch = false;
     }
 }

@@ -22,6 +22,7 @@ public class Laser : MonoBehaviour
         if (Physics.Raycast(ray, out hit, 1000,1<<6))
         {
             line.SetPosition(1, hit.point);
+            hit.transform.gameObject.GetComponent<hit>().HitByRay();
             Debug.Log(hit.transform.gameObject.name);
         }
         else

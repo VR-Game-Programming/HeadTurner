@@ -186,13 +186,13 @@ public class StarField : MonoBehaviour {
     private void Update()
     {
         // Check for numeric presses and toggle the constellation highlighting.
-        for (int i = 0; i < 10; i++)
-        {
-            if (Input.GetKeyDown(KeyCode.Alpha0 + i))
-            {
-                ToggleConstellation(i);
-            }
-        }
+        //for (int i = 0; i < 10; i++)
+        //{
+        //    if (Input.GetKeyDown(KeyCode.Alpha0 + i))
+        //    {
+        //        ToggleConstellation(i);
+        //    }
+        //}
         if (Input.GetKey(KeyCode.Mouse1))
         {
             Camera.main.transform.RotateAround(Camera.main.transform.position, Camera.main.transform.right, Input.GetAxis("Mouse Y"));
