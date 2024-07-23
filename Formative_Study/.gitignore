@@ -3,7 +3,7 @@
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
-Logs
+Logs/
 
 # unity ignore file
 *.csproj
