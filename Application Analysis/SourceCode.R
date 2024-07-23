@@ -387,6 +387,12 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
 ##  delete it if it isn't a valid rotation. Instead, we keep it until it becomes
 ##  the shortest change.
 
+## Remind: This method is a bit more complicated compare to the previous two methods, 
+##  so in order not mess things up, we use lists instead of vectors to handle all the data
+##  storage, therefore, in the beginnning, we convert our vectors to lists takes a longer 
+##  time than expected, it is ordinary to take about half an hour to handle a 150,000 lines
+##  raw data, and about 3 hours to handle 400,000 lines raw data.
+
 ## Implementation:
 
 ## count_same_trend counts the number of data in the same trend and
