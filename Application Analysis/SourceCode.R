@@ -387,12 +387,6 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
 ##  delete it if it isn't a valid rotation. Instead, we keep it until it becomes
 ##  the shortest change.
 
-## Remind: This method is a bit more complicated compare to the previous two methods, 
-##  so in order not mess things up, we use lists instead of vectors to handle all the data
-##  storage, therefore, in the beginnning, we convert our vectors to lists takes a longer 
-##  time than expected, it is ordinary to take about half an hour to handle a 150,000 lines
-##  raw data, and about 3 hours to handle 400,000 lines raw data.
-
 ## Implementation:
 
 ## count_same_trend counts the number of data in the same trend and
@@ -811,7 +805,7 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
 
 
 ##################################################################################################
-## PART 2: ANALYSIS
+## PART 2: INSTANCE
 ##################################################################################################
 
 ## APPs Names
@@ -984,8 +978,8 @@ test_pack_list <- data_filter_counter(d1_test, d2_test, d3_test, valid_row_test,
                                       valid_length_test, valid_thres_test)
 
 ##################################################################################################
-
-## Plotting
+## PART 3: Plotting
+##################################################################################################
 
 ## TIME-BASED
 # Stacked bar chart
@@ -1006,6 +1000,8 @@ app_names <- c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere
 # Iterate through each app, calculating the proportion of each action
 for (i in 1:length(apps)) {
   app_data <- apps[[i]][[1]]
+  app_data <- as.numeric(unlist(app_data))
+  
   total_actions <- sum(app_data)
   
   
@@ -1038,80 +1034,104 @@ ggplot(data, aes(x = App, y = Proportion, fill = Action)) +
        y = "Proportion") +
   theme_minimal()
 
+bs_pack_list <- bs_pack_list_cpy
+fh_pack_list <- fh_pack_list_cpy
+sh_pack_list <- sh_pack_list_cpy
+es1_pack_list <- es1_pack_list_cpy
+es2_pack_list <- es2_pack_list_cpy
 ## Angle-based
+bs_new_pitch_list <- list()
+bs_new_yaw_list <- list()
+bs_new_roll_list <- list()
 
-# 1.Box Plot
+fh_new_pitch_list <- list()
+fh_new_yaw_list <- list()
+fh_new_roll_list <- list()
 
-boxplot(list( bs_pack_list[[2]], fh_pack_list[[2]], sh_pack_list[[2]], 
-              es1_pack_list[[2]], es2_pack_list[[2]]),
-        names = c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere2"),
-        main = "Comparison of Pitch Data across Applications",
-        outline = FALSE,
-        xlab = "Degree")
+sh_new_pitch_list <- list()
+sh_new_yaw_list <- list()
+sh_new_roll_list <- list()
 
-boxplot(list( bs_pack_list[[3]], fh_pack_list[[3]], sh_pack_list[[3]], 
-              es1_pack_list[[3]], es2_pack_list[[3]]),
-        names = c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere2"),
-        main = "Comparison of Yaw Data across Applications",
-        outline = FALSE,
-        xlab = "Degree")
+es1_new_pitch_list <- list()
+es1_new_yaw_list <- list()
+es1_new_roll_list <- list()
 
-boxplot(list( bs_pack_list[[4]], fh_pack_list[[4]], sh_pack_list[[4]], 
-              es1_pack_list[[4]], es2_pack_list[[4]]),
-        names = c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere2"),
-        main = "Comparison of Roll Data across Applications",
-        outline = FALSE,
-        xlab = "Degree")
+es2_new_pitch_list <- list()
+es2_new_yaw_list <- list()
+es2_new_roll_list <- list()
 
-
-## 2.Bar Charts
-
-# 将数据组合到一个列表中
-data_list <- list(
-  Beat_Saber = list(Pitch = bs_pack_list[[2]], Yaw = bs_pack_list[[3]], Roll = bs_pack_list[[4]]),
-  First_Hand = list(Pitch = fh_pack_list[[2]], Yaw = fh_pack_list[[3]], Roll = fh_pack_list[[4]]), 
-  Super_Hot = list(Pitch = sh_pack_list[[2]], Yaw = sh_pack_list[[3]], Roll= sh_pack_list[[4]]), 
-  EcoSphere1 = list(Pitch = es1_pack_list[[2]], Yaw = es1_pack_list[[3]], Roll = es1_pack_list[[4]]), 
-  EcoSphere2 = list(Pitch = es2_pack_list[[2]], Yaw = es2_pack_list[[3]], Roll = es2_pack_list[[4]])
-)
-
-# 计算每组数据的最大值
-results <- data.frame(
-  Application = character(),
-  Direction = character(),
-  Degree = numeric()
-)
-
-for (app in names(data_list)) {
-  for (dir in names(data_list[[app]])) {
-    max_value <- max(abs(data_list[[app]][[dir]]))
-    results <- rbind(results, data.frame(Application = app, Direction = dir, Degree = max_value))
+# Function to filter data
+filter_data <- function(pack_list, new_pitch_list, new_yaw_list, new_roll_list, new_threshold) {
+  for (i in 2:length(pack_list)) {
+    if (i == 2) {
+      for (j in 1:length(pack_list[[2]])) {
+        if (pack_list[[i]][[j]] >= new_threshold) {
+          new_pitch_list <- append(new_pitch_list, pack_list[[i]][[j]])
+        }
+      }
+    } else if (i == 3) {
+      for (j in 1:length(pack_list[[3]])) {
+        if (pack_list[[i]][[j]] >= new_threshold) {
+          new_yaw_list <- append(new_yaw_list, pack_list[[i]][[j]])
+        }
+      }
+    } else if (i == 4) {
+      for (j in 1:length(pack_list[[4]])) {
+        if (pack_list[[i]][[j]] >= new_threshold) {
+          new_roll_list <- append(new_roll_list, pack_list[[i]][[j]])
+        }
+      }
+    }
   }
+  return(list(new_pitch_list, new_yaw_list, new_roll_list))
 }
 
-ggplot(results, aes(x = Application, y = Degree, fill = Direction)) +
-  geom_bar(stat = "identity", position = "dodge") +
+new_threshold <- 5
+bs_filtered <- filter_data(bs_pack_list, bs_new_pitch_list, bs_new_yaw_list, bs_new_roll_list, new_threshold)
+fh_filtered <- filter_data(fh_pack_list, fh_new_pitch_list, fh_new_yaw_list, fh_new_roll_list, new_threshold)
+sh_filtered <- filter_data(sh_pack_list, sh_new_pitch_list, sh_new_yaw_list, sh_new_roll_list, new_threshold)
+es1_filtered <- filter_data(es1_pack_list, es1_new_pitch_list, es1_new_yaw_list, es1_new_roll_list, new_threshold)
+es2_filtered <- filter_data(es2_pack_list, es2_new_pitch_list, es2_new_yaw_list, es2_new_roll_list, new_threshold)
+
+bs_pack_list <- list(0, bs_filtered[[1]], bs_filtered[[2]], bs_filtered[[3]])
+fh_pack_list <- list(0, fh_filtered[[1]], fh_filtered[[2]], fh_filtered[[3]])
+sh_pack_list <- list(0, sh_filtered[[1]], sh_filtered[[2]], sh_filtered[[3]])
+es1_pack_list <- list(0, es1_filtered[[1]], es1_filtered[[2]], es1_filtered[[3]])
+es2_pack_list <- list(0, es2_filtered[[1]], es2_filtered[[2]], es2_filtered[[3]])
+
+## Violin Plots
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+apps <- list(bs_pack_list, fh_pack_list, sh_pack_list, es1_pack_list, es2_pack_list)
+app_names <- c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere2")
+
+data <- data.frame(
+  App = character(),
+  Direction = character(),
+  Value = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (i in 1:length(apps)) {
+  app_data <- apps[[i]]
+  app_name <- app_names[i]
+  
+  pitch_data <- as.numeric(app_data[[2]])
+  yaw_data <- as.numeric(app_data[[3]])
+  roll_data <- as.numeric(app_data[[4]])
+  
+  data <- rbind(data, data.frame(App = rep(app_name, length(pitch_data)), Direction = rep("Pitch", length(pitch_data)), Value = pitch_data))
+  data <- rbind(data, data.frame(App = rep(app_name, length(yaw_data)), Direction = rep("Yaw", length(yaw_data)), Value = yaw_data))
+  data <- rbind(data, data.frame(App = rep(app_name, length(roll_data)), Direction = rep("Roll", length(roll_data)), Value = roll_data))
+}
+
+ggplot(data, aes(x = App, y = Value, fill = Direction)) +
+  geom_violin(trim = FALSE) +
   scale_fill_manual(values = c("Pitch" = "red", "Yaw" = "blue", "Roll" = "green")) +
   theme_minimal() +
-  labs(title = "Max Values of Pitch, Yaw, and Roll for Each Application",
+  labs(title = "Violin Plot of Pitch, Yaw, and Roll for Each Application",
        x = "Application",
        y = "Degree",
        fill = "Direction")
-
-for (i in 1:length(fh_pack_list[[4]])) {
-  if (fh_pack_list[[4]][i] >= 200) {
-    print(i)
-  }
-}
-
-i <- 4800
-while (i < length(fh_pack_list[[4]])) {
-  print(fh_pack_list[[4]][i])
-  i <- i + 1
-}
-
-
-
-
-
-
