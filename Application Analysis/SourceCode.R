@@ -1287,16 +1287,6 @@ ggplot(data, aes(x = App, y = Value, fill = Direction)) +
 
 
 
-
-
-
-
-
-
-
-
-
-
 ########################################
 ## Stacked Bar Chart (plan 4 only)
 
