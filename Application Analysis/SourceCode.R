@@ -805,6 +805,135 @@ data_filter_counter <- function(pitch_data_vec, yaw_data_vec, roll_data_vec,
 
 
 ##################################################################################################
+## Plan 4 (Using)
+## Instead of analysis the head rotation position and 
+##  rotation angle of each turn, we choose to analysis
+##  the position where the head stays.
+
+## handle_outliers deals with the data that's greater than 180 or smaller than -180,
+##  and returns the list contains pitch_vec, yaw_vec and roll_vec in this order.
+handle_outliers <- function(pitch_vec, yaw_vec, roll_vec, valid_row, valid_length) {
+  
+  for (i in valid_row:valid_length) {
+    ## pitch
+    if (pitch_vec[i] > 180) {
+      pitch_vec[i] <- pitch_vec[i] - 360
+    } 
+    else if (pitch_vec[i] < -180) {
+      pitch_vec[i] <- pitch_vec[i] + 360
+    }
+    ## yaw
+    if (yaw_vec[i] > 180) {
+      yaw_vec[i] <- yaw_vec[i] - 360
+    } 
+    else if (yaw_vec[i] < -180) {
+      yaw_vec[i] <- yaw_vec[i] + 360
+    }
+    ## roll
+    if (roll_vec[i] > 180) {
+      roll_vec[i] <- roll_vec[i] - 360
+    } 
+    else if (roll_vec[i] < -180) {
+      roll_vec[i] <- roll_vec[i] + 360
+    }
+  } 
+  cpy_list <- list(pitch_vec, yaw_vec, roll_vec)
+  return(cpy_list)
+}
+
+rotation_counter <- function(is_pitch_turned, is_yaw_turned, is_roll_turned, data_count) {
+  ## 1 for pitch; 2 for yaw; 3 for roll; 
+  ## 4 for pitch + yaw; 5 for pitch + roll;
+  ## 6 for yaw + roll; 7 for pitch + yaw + roll
+  ## 8 for no motion
+  if (is_pitch_turned || is_yaw_turned || is_roll_turned) {
+    if (is_pitch_turned && is_yaw_turned && is_roll_turned) {
+      data_count[[7]] <- data_count[[7]] + 1
+    }
+    else if (is_pitch_turned && is_yaw_turned) {
+      data_count[[4]] <- data_count[[4]] + 1
+    }
+    else if (is_pitch_turned && is_roll_turned) {
+      data_count[[5]] <- data_count[[5]] + 1
+    }
+    else if (is_yaw_turned && is_roll_turned) {
+      data_count[[6]] <- data_count[[6]] + 1
+    }
+    else if (is_pitch_turned) {
+      data_count[[1]] <- data_count[[1]] + 1
+    }
+    else if (is_yaw_turned) {
+      data_count[[2]] <- data_count[[2]] + 1
+    }
+    else {
+      data_count[[3]] <- data_count[[3]] + 1
+    }
+  }
+  else {
+    data_count[[8]] <- data_count[[8]] + 1
+  }
+  return(data_count)
+}
+
+determine_range <- function(position_vec, counting_list) {
+  for (i in 1:length(position_vec)) {
+    if (0 <= abs(position_vec[i]) && abs(position_vec[i]) <= 30) {
+      counting_list[[1]] <- counting_list[[1]] + 1
+    } else if (30 < abs(position_vec[i]) && abs(position_vec[i]) <= 60) {
+      counting_list[[2]] <- counting_list[[2]] + 1
+    } else if (60 < abs(position_vec[i]) && abs(position_vec[i]) <= 90) {
+      counting_list[[3]] <- counting_list[[3]] + 1
+    } else if (90 < abs(position_vec[i]) && abs(position_vec[i]) <= 120) {
+      counting_list[[4]] <- counting_list[[4]] + 1
+    } else if (120 < abs(position_vec[i]) && abs(position_vec[i]) <= 150) {
+      counting_list[[5]] <- counting_list[[5]] + 1
+    } else if (150 < abs(position_vec[i]) && abs(position_vec[i]) <= 180) {
+      counting_list[[6]] <- counting_list[[6]] + 1
+    } else {
+      stop("determine_range, angle range > 180 degree.")
+    }
+  }
+  return(counting_list)
+}
+
+
+position_counter <- function(position_list, valid_row, valid_length) {
+  ## handle_outliers <- function(pitch_vec, yaw_vec, roll_vec, valid_row, valid_length)
+  ## Index : Range
+  ## 1: 0 - 30
+  ## 2: 30 - 60
+  ## 3: 60 - 90
+  ## 4: 90 - 120
+  ## 5: 120 - 150
+  ## 6: 150 - 180
+  position_list <- handle_outliers(position_list[[1]], position_list[[2]], position_list[[3]],
+                                   valid_row, valid_length)
+  pitch_count <- list(0,0,0,0,0,0)
+  yaw_count <- list(0,0,0,0,0,0)
+  roll_count <- list(0,0,0,0,0,0)
+  
+  for (i in 1:length(position_list)) {
+
+    if (i == 1) {
+      pitch_count <- determine_range(position_list[[i]], pitch_count)
+    }
+    else if (i == 2) {
+      yaw_count <- determine_range(position_list[[i]], yaw_count)
+    }
+    else if (i == 3) {
+      roll_count <- determine_range(position_list[[i]], roll_count)
+    }
+    else {
+      stop("position_counter, length out of range 3.")
+    }
+  }
+  
+  return(list(pitch_count, yaw_count, roll_count))
+}
+
+
+
+##################################################################################################
 ## PART 2: INSTANCE
 ##################################################################################################
 
@@ -836,18 +965,25 @@ bs_roll_cpy <- bs_roll_data
 
 ## Incetance
 valid_row <- 1
-bs_pack_list <- data_filter_counter(bs_pitch_cpy, 
-                                    bs_yaw_cpy, 
-                                    bs_roll_cpy, 
-                                    valid_row, 
-                                    bs_valid_data_length, 
-                                    valid_threshold)
+
+bs_pack_list <- position_counter(list(bs_pitch_cpy, bs_yaw_cpy, bs_roll_cpy), valid_row, bs_valid_data_length)
+
+
+
+
+##bs_pack_list <- data_filter_counter(bs_pitch_cpy, 
+##                                    bs_yaw_cpy, 
+##                                    bs_roll_cpy, 
+##                                    valid_row, 
+##                                    bs_valid_data_length, 
+##                                    valid_threshold)
+
 ##################################################################################################
 ## First Hand
 f2 <- file.choose()
 fh_data <- read.csv(f2)
 valid_threshold <- 0.5
-valid_row <- 2
+valid_row <- 1
 
 fh_pitch_data <- fh_data$Pitch[valid_row:length(fh_data$Pitch)]
 fh_yaw_data <- fh_data$Yaw[valid_row:length(fh_data$Yaw)]
@@ -863,19 +999,21 @@ fh_yaw_cpy <- fh_yaw_data
 fh_roll_cpy <- fh_roll_data
 
 # Instance
-valid_row <- 1
-fh_pack_list <- data_filter_counter(fh_pitch_cpy, 
-                                    fh_yaw_cpy, 
-                                    fh_roll_cpy, 
-                                    valid_row, 
-                                    fh_valid_data_length, 
-                                    valid_threshold)
+fh_pack_list <- position_counter(list(fh_pitch_cpy, fh_yaw_cpy, fh_roll_cpy), 
+                                 valid_row, fh_valid_data_length)
+
+##fh_pack_list <- data_filter_counter(fh_pitch_cpy, 
+##                                    fh_yaw_cpy, 
+##                                    fh_roll_cpy, 
+##                                    valid_row, 
+##                                    fh_valid_data_length, 
+##                                    valid_threshold)
 ##################################################################################################
 ## Super Hot
 f3 <- file.choose()
 sh_data <- read.csv(f3)
 valid_threshold <- 0.5
-valid_row <- 2
+valid_row <- 1
 
 sh_pitch_data <- sh_data$Pitch[valid_row:length(sh_data$Pitch)]
 sh_yaw_data <- sh_data$Yaw[valid_row:length(sh_data$Yaw)]
@@ -892,13 +1030,15 @@ sh_roll_cpy <- sh_roll_data
 
 
 # Instance
-valid_row <- 1
-sh_pack_list <- data_filter_counter(sh_pitch_cpy, 
-                                    sh_yaw_cpy, 
-                                    sh_roll_cpy, 
-                                    valid_row, 
-                                    sh_valid_data_length, 
-                                    valid_threshold)
+sh_pack_list <- position_counter(list(sh_pitch_cpy, sh_yaw_cpy, sh_roll_cpy), 
+                                 valid_row, sh_valid_data_length)
+
+##sh_pack_list <- data_filter_counter(sh_pitch_cpy, 
+##                                    sh_yaw_cpy, 
+##                                    sh_roll_cpy, 
+##                                    valid_row, 
+##                                    sh_valid_data_length, 
+##                                    valid_threshold)
 
 ##################################################################################################
 ## EcoSphere dataset 1
@@ -908,7 +1048,7 @@ sh_pack_list <- data_filter_counter(sh_pitch_cpy,
 f4 <- file.choose()
 es1_data <- read.csv(f4)
 valid_threshold <- 0.5
-valid_row <- 2
+valid_row <- 1
 
 
 es1_pitch_data <- es1_data$Pitch[valid_row:length(es1_data$Pitch)]
@@ -927,20 +1067,24 @@ es1_roll_cpy <- es1_roll_data
 
 
 # Instance
-valid_row <- 1
-es1_pack_list <- data_filter_counter(es1_pitch_cpy, 
-                                    es1_yaw_cpy, 
-                                    es1_roll_cpy, 
-                                    valid_row, 
-                                    es1_valid_data_length, 
-                                    valid_threshold)
+es1_pack_list <- position_counter(list(es1_pitch_cpy, es1_yaw_cpy, es1_roll_cpy), 
+                                 valid_row, es1_valid_data_length)
+
+
+
+##es1_pack_list <- data_filter_counter(es1_pitch_cpy, 
+##                                    es1_yaw_cpy, 
+##                                    es1_roll_cpy, 
+##                                    valid_row, 
+##                                    es1_valid_data_length, 
+##                                    valid_threshold)
 
 ##################################################################################################
 ## EcoSphere dataset 2
 f5 <- file.choose()
 es2_data <- read.csv(f5)
 valid_threshold <- 0.5
-valid_row <- 2
+valid_row <- 1
 
 
 es2_pitch_data <- es2_data$Pitch[valid_row:length(es2_data$Pitch)]
@@ -958,13 +1102,15 @@ es2_roll_cpy <- es2_roll_data
 
 
 # Instance
-valid_row <- 1
-es2_pack_list <- data_filter_counter(es2_pitch_cpy, 
-                                    es2_yaw_cpy, 
-                                    es2_roll_cpy, 
-                                    valid_row, 
-                                    es2_valid_data_length, 
-                                    valid_threshold)
+es2_pack_list <- position_counter(list(es2_pitch_cpy, es2_yaw_cpy, es2_roll_cpy), 
+                                  valid_row, es2_valid_data_length)
+
+##es2_pack_list <- data_filter_counter(es2_pitch_cpy, 
+##                                    es2_yaw_cpy, 
+##                                    es2_roll_cpy, 
+##                                    valid_row, 
+##                                    es2_valid_data_length, 
+##                                    valid_threshold)
 
 ## Test
 d1_test <- c(2,3,4,1,2,9)
@@ -1034,12 +1180,14 @@ ggplot(data, aes(x = App, y = Proportion, fill = Action)) +
        y = "Proportion") +
   theme_minimal()
 
+
+## Angle-based
 bs_pack_list <- bs_pack_list_cpy
 fh_pack_list <- fh_pack_list_cpy
 sh_pack_list <- sh_pack_list_cpy
 es1_pack_list <- es1_pack_list_cpy
 es2_pack_list <- es2_pack_list_cpy
-## Angle-based
+
 bs_new_pitch_list <- list()
 bs_new_yaw_list <- list()
 bs_new_roll_list <- list()
@@ -1135,3 +1283,170 @@ ggplot(data, aes(x = App, y = Value, fill = Direction)) +
        x = "Application",
        y = "Degree",
        fill = "Direction")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########################################
+## Stacked Bar Chart (plan 4 only)
+
+## Pitch
+# Lists of data for each app
+## pack_list : list(pitch_count, yaw_count, roll_count)
+## _count : list(0,0,0,0,0,0,0)
+apps <- list(bs_pack_list, fh_pack_list, sh_pack_list, es1_pack_list, es2_pack_list)
+
+# Create an empty data frame to store the counts
+data <- data.frame(
+  App = character(),
+  Range = character(),
+  Proportion = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Define the names of each app
+app_names <- c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere2")
+
+# Iterate through each app, calculating the proportion of each action
+for (i in 1:length(apps)) {
+  app_data <- apps[[i]][[1]] 
+  
+  total_angles <- sum(unlist(app_data))
+  
+  if (total_angles == 0) {
+    total_angles <- 1 
+  }
+  
+  # Add proportion data to the data frame
+  data <- rbind(data, data.frame(App = app_names[i], Range = "0-30", Proportion = app_data[[1]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "30-60", Proportion = app_data[[2]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "60-90", Proportion = app_data[[3]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "90-120", Proportion = app_data[[4]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "120-150", Proportion = app_data[[5]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "150-180", Proportion = app_data[[6]] / total_angles))
+}
+
+library(ggplot2)
+
+ggplot(data, aes(x = App, y = Proportion, fill = Range)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("0-30" = "gray", 
+                               "30-60" = "blue", 
+                               "60-90" = "green", 
+                               "90-120" = "red", 
+                               "120-150" = "purple", 
+                               "150-180" = "orange")) + 
+  labs(title = "Proportion of Head Movement in Different Angle Ranges \nin the Pitch Direction of Various Apps",
+       x = "App",
+       y = "Proportion") +
+  theme_minimal()
+
+########################################
+## Yaw
+apps <- list(bs_pack_list, fh_pack_list, sh_pack_list, es1_pack_list, es2_pack_list)
+
+# Create an empty data frame to store the counts
+data <- data.frame(
+  App = character(),
+  Range = character(),
+  Proportion = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Define the names of each app
+app_names <- c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere2")
+
+# Iterate through each app, calculating the proportion of each action
+for (i in 1:length(apps)) {
+  app_data <- apps[[i]][[2]]
+  
+  total_angles <- sum(unlist(app_data))
+  
+  if (total_angles == 0) {
+    total_angles <- 1 
+  }
+  
+  # Add proportion data to the data frame
+  data <- rbind(data, data.frame(App = app_names[i], Range = "0-30", Proportion = app_data[[1]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "30-60", Proportion = app_data[[2]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "60-90", Proportion = app_data[[3]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "90-120", Proportion = app_data[[4]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "120-150", Proportion = app_data[[5]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "150-180", Proportion = app_data[[6]] / total_angles))
+}
+
+# Use ggplot2 to plot the stacked bar chart for pitch direction
+library(ggplot2)
+
+ggplot(data, aes(x = App, y = Proportion, fill = Range)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("0-30" = "gray", 
+                               "30-60" = "blue", 
+                               "60-90" = "green", 
+                               "90-120" = "red", 
+                               "120-150" = "purple", 
+                               "150-180" = "orange")) + 
+  labs(title = "Proportion of Head Movement in Different Angle Ranges in the Yaw Direction of Various Apps",
+       x = "App",
+       y = "Proportion") +
+  theme_minimal()
+
+
+########################################
+## Roll
+apps <- list(bs_pack_list, fh_pack_list, sh_pack_list, es1_pack_list, es2_pack_list)
+
+# Create an empty data frame to store the counts
+data <- data.frame(
+  App = character(),
+  Range = character(),
+  Proportion = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Define the names of each app
+app_names <- c("Beat Saber", "First Hand", "Super Hot", "EcoSphere1", "EcoSphere2")
+
+# Iterate through each app, calculating the proportion of each action
+for (i in 1:length(apps)) {
+  app_data <- apps[[i]][[3]] 
+  
+  total_angles <- sum(unlist(app_data))
+  
+  if (total_angles == 0) {
+    total_angles <- 1 
+  }
+  
+  # Add proportion data to the data frame
+  data <- rbind(data, data.frame(App = app_names[i], Range = "0-30", Proportion = app_data[[1]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "30-60", Proportion = app_data[[2]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "60-90", Proportion = app_data[[3]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "90-120", Proportion = app_data[[4]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "120-150", Proportion = app_data[[5]] / total_angles))
+  data <- rbind(data, data.frame(App = app_names[i], Range = "150-180", Proportion = app_data[[6]] / total_angles))
+}
+
+library(ggplot2)
+
+ggplot(data, aes(x = App, y = Proportion, fill = Range)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("0-30" = "gray", 
+                               "30-60" = "blue", 
+                               "60-90" = "green", 
+                               "90-120" = "red", 
+                               "120-150" = "purple", 
+                               "150-180" = "orange")) + 
+  labs(title = "Proportion of Head Movement in Different Angle Ranges \nin the Roll Direction of Various Apps",
+       x = "App",
+       y = "Proportion") +
+  theme_minimal()
