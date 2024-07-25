@@ -1328,6 +1328,8 @@ for (i in 1:length(apps)) {
 
 library(ggplot2)
 
+data$Range <- factor(data$Range, levels = c("0-30", "30-60", "60-90", "90-120", "120-150", "150-180"))
+
 ggplot(data, aes(x = App, y = Proportion, fill = Range)) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = c("0-30" = "gray", 
@@ -1378,6 +1380,8 @@ for (i in 1:length(apps)) {
 # Use ggplot2 to plot the stacked bar chart for pitch direction
 library(ggplot2)
 
+data$Range <- factor(data$Range, levels = c("0-30", "30-60", "60-90", "90-120", "120-150", "150-180"))
+
 ggplot(data, aes(x = App, y = Proportion, fill = Range)) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = c("0-30" = "gray", 
@@ -1427,6 +1431,8 @@ for (i in 1:length(apps)) {
 }
 
 library(ggplot2)
+
+data$Range <- factor(data$Range, levels = c("0-30", "30-60", "60-90", "90-120", "120-150", "150-180"))
 
 ggplot(data, aes(x = App, y = Proportion, fill = Range)) +
   geom_bar(stat = "identity") +
