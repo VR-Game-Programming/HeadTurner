@@ -15,7 +15,7 @@ public class hit : MonoBehaviour
         if (hitten == false)
         {
             Time.timeScale = 1;
-            hitten = true;
+            
             StartCoroutine(ChangeTouch());
             //pause.touch =false;
         }
@@ -23,7 +23,8 @@ public class hit : MonoBehaviour
     }
     private IEnumerator ChangeTouch()
     {
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(4);
+        hitten = true;
         pause.touch = false;
     }
 }
