@@ -5,7 +5,7 @@ using UnityEngine;
 public class PauseAnimation : MonoBehaviour
 {
     //public Animator stars;
-    public bool pause = false, touch = false;
+    public bool pause = false, touch = false,play=false;
 
     // Update is called once per frame
     void Update()
@@ -16,6 +16,11 @@ public class PauseAnimation : MonoBehaviour
             Time.timeScale = 0;
             touch = true;
             pause = false;
+
+        }
+        if(play){
+            Time.timeScale = 1;
+            play=false;
 
         }
     }

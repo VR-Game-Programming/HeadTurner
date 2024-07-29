@@ -48,8 +48,8 @@ public class DOFCommunication : MonoBehaviour
         // Continuously update the motor angles to the target angles linearly
         if (currentLeftMotor != targerLeftMotor || currentRightMotor != targetRightMotor)
         {
-            currentLeftMotor = (int)Mathf.Lerp(currentLeftMotor, targerLeftMotor, Time.deltaTime * motorSpeed);
-            currentRightMotor = (int)Mathf.Lerp(currentRightMotor, targetRightMotor, Time.deltaTime * motorSpeed);
+            currentLeftMotor = (int)Mathf.Lerp(currentLeftMotor, targerLeftMotor, motorSpeed);
+            currentRightMotor = (int)Mathf.Lerp(currentRightMotor, targetRightMotor, motorSpeed);
         }
         Command(currentLeftMotor, currentRightMotor);
     }
@@ -73,6 +73,7 @@ public class DOFCommunication : MonoBehaviour
     }
     void OnDestroy()
     {
+        Command(middleMotor[0], middleMotor[1]);
         if (port.IsOpen)
         {
             port.Close();
