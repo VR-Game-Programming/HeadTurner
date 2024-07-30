@@ -166,10 +166,12 @@ void USB_CMD_Task(void ) {
 }
 
 void USB_Plot_Task(void ) {
-  if (Timer_USB.Timer_Task(TIME_USB_MS_PLOT ) ) {
-    Serial.print(slSet_Point ) ;
-    Serial.print(" ") ;
-    Serial.println(slEncoder_Counter ) ;
+  if (Serial.availableForWrite() >= BUFFER_SIZE_USB) {
+    if (Timer_USB.Timer_Task(TIME_USB_MS_PLOT ) ) {
+      Serial.print(slSet_Point ) ;
+      Serial.print(" ") ;
+      Serial.println(slEncoder_Counter ) ;
+    }
   }
 }
 
@@ -272,13 +274,19 @@ void Control_Task(void ) {
       }
       else LED_ONBOARD_OFF() ;
 
-      if (_bSign_output ) {
-        MOTOR_CW(_slOutput_temp ) ;
-        iSpeed = _slOutput_temp ;
+      if (abs(_slPos_err) > DEAD_ZONE) {
+        if (_bSign_output ) {
+          MOTOR_CW(_slOutput_temp ) ;
+          iSpeed = _slOutput_temp ;
+        }
+        else {
+          MOTOR_CCW(_slOutput_temp ) ;
+          iSpeed = -_slOutput_temp ;
+        }
       }
       else {
-        MOTOR_CCW(_slOutput_temp ) ;
-        iSpeed = -_slOutput_temp ;
+        MOTOR_STOP();
+        iSpeed = 0 ;
       }
     }
   }

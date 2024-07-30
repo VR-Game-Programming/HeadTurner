@@ -34,9 +34,11 @@ public class ArduinoCommunication : MonoBehaviour
     }
     private void Start()
     {
+        /* StartCoroutine(ActuatorCommand());
+        StartCoroutine(EncoderRead()); */
         arduinoCommander = new Thread(ArduinoCommand);
-        arduinoCommander.Start();
         arduinoReader = new Thread(ArduinoRead);
+        arduinoCommander.Start();
         arduinoReader.Start();
     }
     protected void Command(char mode, int pos)
@@ -44,6 +46,39 @@ public class ArduinoCommunication : MonoBehaviour
         if (!port.IsOpen) return;
         port.WriteLine(mode + pos.ToString());
         Debug.Log(mode + pos.ToString());
+    }
+    IEnumerator ActuatorCommand()
+    {
+        while (true)
+        {
+            currentMotor = (int)Mathf.Lerp(currentMotor, targetMotor, motorSpeed);
+            currentMotor = Mathf.Clamp(currentMotor, -motorRange / 2, motorRange / 2);
+            try
+            {
+                Command('p', currentMotor);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed sending command. Log: \n{e}");
+            }
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+    IEnumerator EncoderRead()
+    {
+        while (true)
+        {
+            try
+            {
+                string message = port.ReadLine();
+                Debug.Log(message);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed reading message. Log: \n{e}");
+            }
+            yield return new WaitForSeconds(0.1f);
+        }
     }
 
     // Update is called once per frame
