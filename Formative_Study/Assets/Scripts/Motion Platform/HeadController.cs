@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HeadController : MonoBehaviour
+public class HeadControl : MonoBehaviour
 {
     // Using the CenterEyeAnchor or OptiTrack Rigidbody as the head anchor
     public Transform headAnchor;
