@@ -12,7 +12,15 @@ public class ArduinoCommunication : MonoBehaviour
     const int motorRange = 2000;
 
     private SerialPort port;
-    public int targetMotor = 0;
+    int targetLinearMotor = 0;
+    public int TargetLinearMotor{
+        get{
+            return targetLinearMotor;
+        }
+        set{
+            targetLinearMotor = value;
+        }
+    }
     int currentMotor = 0;
     float threshold = 15f;
     public float motorSpeed = 0.15f;
@@ -51,7 +59,7 @@ public class ArduinoCommunication : MonoBehaviour
     {
         while (true)
         {
-            currentMotor = (int)Mathf.Lerp(currentMotor, targetMotor, motorSpeed);
+            currentMotor = (int)Mathf.Lerp(currentMotor, targetLinearMotor, motorSpeed);
             currentMotor = Mathf.Clamp(currentMotor, -motorRange / 2, motorRange / 2);
             try
             {
@@ -86,9 +94,9 @@ public class ArduinoCommunication : MonoBehaviour
     {
         while (true)
         {
-            if (Math.Abs(currentMotor - targetMotor) > threshold)
+            if (Math.Abs(currentMotor - targetLinearMotor) > threshold)
             {
-                currentMotor = (int)Mathf.Lerp(currentMotor, targetMotor, motorSpeed);
+                currentMotor = (int)Mathf.Lerp(currentMotor, targetLinearMotor, motorSpeed);
                 currentMotor = Mathf.Clamp(currentMotor, -motorRange / 2, motorRange / 2);
                 try
                 {
@@ -113,7 +121,7 @@ public class ArduinoCommunication : MonoBehaviour
             try
             {
                 string message = port.ReadLine();
-                Debug.Log(message);
+                //Debug.Log(message);
             }
             catch (Exception e)
             {
