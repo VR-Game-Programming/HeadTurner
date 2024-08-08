@@ -6,7 +6,8 @@ First, please ensure you have RStudio or any other R code IDE installed beforeha
 so we can proceed with the following steps. You can follow this installation instruction 
 for RStudio: https://www.youtube.com/watch?v=oaHsmgULh7I
 
-Then, open RStudio and locate the console. Please type install.packages("ggplot2") in the console and press Enter, as we will be using ggplot2 in the code.
+Then, open RStudio and locate the console. Please type install.packages("ggplot2") in the 
+console and press Enter, as we will be using ggplot2 in the code.
 
 In SourceCode.R, we have documented the plans we developed during the research period. 
 Currently, we are using plan 4 to demonstrate the analysis of head rotation when using different apps.
