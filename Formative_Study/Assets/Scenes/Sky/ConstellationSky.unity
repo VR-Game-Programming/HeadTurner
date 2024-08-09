@@ -1958,6 +1958,7 @@ GameObject:
   - component: {fileID: 1207434189}
   - component: {fileID: 1207434190}
   - component: {fileID: 1207434191}
+  - component: {fileID: 1207434192}
   m_Layer: 6
   m_Name: LittleBear_ui
   m_TagString: Constellations
@@ -2021,7 +2022,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 9ad3453f5d29be449932cce17d140dfc, type: 3}
+  m_Sprite: {fileID: -860204172, guid: a46cda9781cac34488aea279ae5a04c0, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_FlipX: 0
   m_FlipY: 0
@@ -2065,6 +2066,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ad9b1dc870f7604495a96a3846fc6fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!95 &1207434192
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1207434187}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: d93f7ea8228be804db456c06e7d1bf5b, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1315548577
 GameObject:
   m_ObjectHideFlags: 0
