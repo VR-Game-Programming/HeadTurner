@@ -10,7 +10,7 @@
 # 1. Using
 # Step 1: To use the code to draw stacked bar charts, you need to copy the code from 
 #   the handle_outliers function to the Stacked_Bar_Plotter function, which spans from 
-#   line 49 to 257 (inclusive), and paste it into the Console. Ensure that you have 
+#   line 49 to 269 (inclusive), and paste it into the Console. Ensure that you have 
 #   RStudio installed; if not, please refer to the readme.txt file. These are the 
 #   functions needed to analyze the data and generate the graph.
 # Step 2: Next, copy and paste the code in line 261 into the Console. This will invoke 
