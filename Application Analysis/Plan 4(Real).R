@@ -18,10 +18,10 @@
 #   of apps you wish to analyze. After entering this number, open the .csv files one by one,
 #   make sure that the name of your files is the corresponding name of the apps.
 # Step 3: Once all the files have been opened and the code execution is complete, copy and 
-#   paste the code from line 263 into the Console. This code will invoke the plotting function. 
+#   paste the code from line 274 into the Console. This code will invoke the plotting function. 
 #   Type one of the three directions (Pitch, Yaw, Roll) to generate the final plot.
 # Step 4: To obtain plots for all three directions, repeat the process by copying and pasting 
-#   the code in line 266 after completing Steps 1 and 2. Enter "Pitch," "Yaw," and "Roll" 
+#   the code in line 277 after completing Steps 1 and 2. Enter "Pitch," "Yaw," and "Roll" 
 #   each time to generate the respective plots.
 
 # 2. Reading
