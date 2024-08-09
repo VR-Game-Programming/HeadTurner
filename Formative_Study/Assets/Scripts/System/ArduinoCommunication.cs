@@ -53,7 +53,7 @@ public class ArduinoCommunication : MonoBehaviour
     {
         if (!port.IsOpen) return;
         port.WriteLine(mode + pos.ToString());
-        Debug.Log(mode + pos.ToString());
+        //Debug.Log(mode + pos.ToString());
     }
     IEnumerator ActuatorCommand()
     {
@@ -79,7 +79,7 @@ public class ArduinoCommunication : MonoBehaviour
             try
             {
                 string message = port.ReadLine();
-                Debug.Log(message);
+                //Debug.Log(message);
             }
             catch (Exception e)
             {
