@@ -82,17 +82,17 @@ handle_outliers <- function(pitch_vec, yaw_vec, roll_vec, valid_row, valid_lengt
 ##  we have a total of six different ranges.
 determine_range <- function(position_vec, counting_list) {
   for (i in 1:length(position_vec)) {
-    if (0 <= abs(position_vec[i]) && abs(position_vec[i]) <= 30) {
+    if (0 <= abs(position_vec[i]) && abs(position_vec[i]) <= 5) {
       counting_list[[1]] <- counting_list[[1]] + 1
-    } else if (30 < abs(position_vec[i]) && abs(position_vec[i]) <= 60) {
+    } else if (5 < abs(position_vec[i]) && abs(position_vec[i]) <= 10) {
       counting_list[[2]] <- counting_list[[2]] + 1
-    } else if (60 < abs(position_vec[i]) && abs(position_vec[i]) <= 90) {
+    } else if (10 < abs(position_vec[i]) && abs(position_vec[i]) <= 15) {
       counting_list[[3]] <- counting_list[[3]] + 1
-    } else if (90 < abs(position_vec[i]) && abs(position_vec[i]) <= 120) {
+    } else if (15 < abs(position_vec[i]) && abs(position_vec[i]) <= 20) {
       counting_list[[4]] <- counting_list[[4]] + 1
-    } else if (120 < abs(position_vec[i]) && abs(position_vec[i]) <= 150) {
+    } else if (20 < abs(position_vec[i]) && abs(position_vec[i]) <= 25) {
       counting_list[[5]] <- counting_list[[5]] + 1
-    } else if (150 < abs(position_vec[i]) && abs(position_vec[i]) <= 180) {
+    } else if (abs(position_vec[i]) > 25) {
       counting_list[[6]] <- counting_list[[6]] + 1
     } else {
       stop("determine_range, angle range > 180 degree.")
@@ -106,12 +106,12 @@ determine_range <- function(position_vec, counting_list) {
 position_counter <- function(position_list, valid_row, valid_length) {
   ## handle_outliers <- function(pitch_vec, yaw_vec, roll_vec, valid_row, valid_length)
   ## Index : Range
-  ## 1: 0 - 30
-  ## 2: 30 - 60
-  ## 3: 60 - 90
-  ## 4: 90 - 120
-  ## 5: 120 - 150
-  ## 6: 150 - 180
+  ## 1: 0 - 5
+  ## 2: 5 - 10
+  ## 3: 10 - 15
+  ## 4: 15 - 20
+  ## 5: 20 - 25
+  ## 6: > 25
   position_list <- handle_outliers(position_list[[1]], position_list[[2]], position_list[[3]],
                                    valid_row, valid_length)
   pitch_count <- list(0,0,0,0,0,0)
@@ -142,18 +142,23 @@ position_counter <- function(position_list, valid_row, valid_length) {
 ##################################################################################################
 
 Analysis_Func <- function() {
-  trying_limit <- 3
-  trying_times <- 0
-  while (TRUE) {
+trying_times <- 0
+trying_limit <- 3 
+
+while (TRUE) {
     input_val <- readline(prompt = "Please enter the number of apps that need to be analyzed (Integer > 0 Only): ")
-    if (is.integer(input_val)) {
-      break
+  
+    num_val <- as.numeric(input_val)
+    
+    if (!is.na(num_val) && num_val > 0 && num_val == as.integer(num_val)) {
+        break
     }
+    
     trying_times <- trying_times + 1
     if (trying_times == trying_limit) {
       stop("Invalid Number. Too many tries.")
     }
-  }
+}
   app_num <- as.numeric(input_val)
   
   data <- data.frame(
@@ -187,7 +192,6 @@ Analysis_Func <- function() {
 ##################################################################################################
 
 Stacked_Bar_Plotter <- function(apps_list) {
-  direction <- readline(prompt = "Please enter the direction in one word (One of Pitch, Yaw or Roll) eg. Pitch: ")
   
   library(ggplot2)
   # Create an empty data frame to store the counts
@@ -198,26 +202,33 @@ Stacked_Bar_Plotter <- function(apps_list) {
     stringsAsFactors = FALSE
   )
   
-  trying_limit <- 3
-  trying_time <- 0
-  while (TRUE) {
+trying_limit <- 3
+trying_time <- 0
+
+while (TRUE) {
+    direction <- readline(prompt = "Please enter the direction in one word (One of Pitch, Yaw or Roll) eg. Pitch: ")
+    
     if (direction == "Pitch") {
       dir_idx <- 1
+      break
     }
     else if (direction == "Yaw") {
       dir_idx <- 2
+      break
     }
     else if (direction == "Roll") {
       dir_idx <- 3
+      break
     }
+    
     trying_time <- trying_time + 1
+    
     if (trying_time == trying_limit) {
       stop("Wrong direction name. Too many tries.")
-    }
-    else {
+    } else {
       print("Wrong direction name, please remind the capital letters and spellings.")
     }
-  }
+}
   
   # Iterate through each app, calculating the proportion of each action
   for (i in 1:length(apps_list)) {
@@ -230,25 +241,25 @@ Stacked_Bar_Plotter <- function(apps_list) {
     }
     
     # Add proportion data to the data frame
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "0-30", Proportion = app_data[[1]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "30-60", Proportion = app_data[[2]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "60-90", Proportion = app_data[[3]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "90-120", Proportion = app_data[[4]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "120-150", Proportion = app_data[[5]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "150-180", Proportion = app_data[[6]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "0-5", Proportion = app_data[[1]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "5-10", Proportion = app_data[[2]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "10-15", Proportion = app_data[[3]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "15-20", Proportion = app_data[[4]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "20-25", Proportion = app_data[[5]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = ">25", Proportion = app_data[[6]] / total_angles))
   }
   
-  data$Range <- factor(data$Range, levels = c("0-30", "30-60", "60-90", "90-120", "120-150", "150-180"))
+  data$Range <- factor(data$Range, levels = c("0-5", "5-10", "10-15", "15-20", "20-25", ">25"))
   
   ggplot(data, aes(x = App, y = Proportion, fill = Range)) +
     geom_bar(stat = "identity") +
     scale_fill_manual(name = "Range in Degrees", 
-                      values = c("0-30" = "lightskyblue", 
-                                 "30-60" = "deepskyblue", 
-                                 "60-90" = "dodgerblue", 
-                                 "90-120" = "blue", 
-                                 "120-150" = "mediumblue", 
-                                 "150-180" = "darkblue")) + 
+                      values = c("0-5" = "lightskyblue", 
+                                 "5-10" = "deepskyblue", 
+                                 "10-15" = "dodgerblue", 
+                                 "15-20" = "blue", 
+                                 "20-25" = "mediumblue", 
+                                 ">25" = "darkblue")) + 
     labs(title = paste("Proportion of Head Movement in Different Angle Ranges \nin the", 
                        direction, 
                        "Direction of Various Apps"),
