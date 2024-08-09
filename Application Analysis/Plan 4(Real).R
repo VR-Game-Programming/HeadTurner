@@ -31,12 +31,12 @@
 #   PART 1.1: This is the primary code for recording and analyzing data. It processes raw pitch, 
 #     yaw, and roll data, categorizing them into different directional ranges. There are six 
 #     ranges in degrees:
-#     0 - 30 (inclusive)
-#     30 - 60 (excluding 30, including 60)
-#     60 - 90 (excluding 60, including 90)
-#     90 - 120 (excluding 90, including 120)
-#     120 - 150 (excluding 120, including 150)
-#     150 - 180 (excluding 150, including 180)
+#     0 - 5 (inclusive)
+#     5 - 10 (excluding 5, including 10)
+#     10 - 15 (excluding 10, including 15)
+#     15 - 20 (excluding 15, including 20)
+#     20 - 25 (excluding 20, including 25)
+#     > 25 (greater than 25)
 #   PART 1.2: This code requires the user to open the .csv files and uses the functions from 
 #     PART 1.1 to perform the categorization.
 # PART 2: This is the plotting code. You should have ggplot2 installed to successfully generate 
