@@ -96,10 +96,19 @@ public class EMGLogger_O
     public void close()
     {
         _running = false;
+        if (_endLogging)
+        {
+            string end_time = _serialPort.ReadLine().Split(',')[0];
+            string data = "EOL" + ","
+                + _cur_posture + ","
+                + _cur_start_time + ","
+                + end_time + ",";
+            _timestampWriter.WriteLine(data);
+        }
+        _thread.Abort();
         _dataWriter.Close();
         _timestampWriter.Close();
         if (_serialPort.IsOpen)
             _serialPort.Close();
-        _thread.Abort();
     }
 }

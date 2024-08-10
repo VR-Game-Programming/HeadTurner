@@ -10,7 +10,7 @@ public class PauseAnimation : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(pause);
+        //Debug.Log(pause);
         if (pause && touch == false)
         {
             Time.timeScale = 0;

@@ -8,6 +8,7 @@ public class HeadController : MonoBehaviour
     // Actuate the yawing angle according to the head rotation
     public DOFCommunication dOFCommunication;
     public ArduinoCommunication arduinoCommunication;
+    public bool enableActuation = true;
     float yawHeadRelativeToTrunk, pitchAngle;
     float targetPlatformMotor = 0.5f;
     int targetLinearMotor;
@@ -30,6 +31,10 @@ public class HeadController : MonoBehaviour
     }
     private void Update()
     {
+        if (!enableActuation)
+        {
+            return;
+        }
         if (orientationUtility.IsCalibrated)
         {
             // Get the Yaw angle from the OrientationUtility script
@@ -47,7 +52,7 @@ public class HeadController : MonoBehaviour
             pitchAngle = Mathf.Clamp(orientationUtility.PitchAngle, -45, 45);
             targetLinearMotor = (int)(1250 * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
             arduinoCommunication.TargetLinearMotor = targetLinearMotor;
-            Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString() + "|pitchAngle: " + pitchAngle.ToString());
+            //Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString() + "|pitchAngle: " + pitchAngle.ToString());
         }
     }
 }

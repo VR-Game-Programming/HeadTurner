@@ -23,7 +23,7 @@ public class Laser : MonoBehaviour
         {
             line.SetPosition(1, hit.point);
             hit.transform.gameObject.GetComponent<hit>().HitByRay();
-            Debug.Log(hit.transform.gameObject.name);
+            //Debug.Log(hit.transform.gameObject.name);
         }
         else
         {

@@ -66,7 +66,7 @@ GameObject:
   - component: {fileID: 2452106846824428252}
   - component: {fileID: 1438233529585660198}
   m_Layer: 0
-  m_Name: Tracked Bat SwingImpact
+  m_Name: Tracked RigidBody
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -100,5 +100,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   StreamingClient: {fileID: 1438233528319916599}
-  RigidBodyId: 1
+  RigidBodyId: 1014
   NetworkCompensation: 1
