@@ -10,7 +10,7 @@
 # 1. Using
 # Step 1: To use the code to draw stacked bar charts, you need to copy the code from 
 #   the handle_outliers function to the Stacked_Bar_Plotter function, which spans from 
-#   line 49 to 269 (inclusive), and paste it into the Console. Ensure that you have 
+#   line 51 to 273 (inclusive), and paste it into the Console. Ensure that you have 
 #   RStudio installed; if not, please refer to the readme.txt file. These are the 
 #   functions needed to analyze the data and generate the graph.
 # Step 2: Next, copy and paste the code in line 261 into the Console. This will invoke 
@@ -18,10 +18,10 @@
 #   of apps you wish to analyze. After entering this number, open the .csv files one by one,
 #   make sure that the name of your files is the corresponding name of the apps.
 # Step 3: Once all the files have been opened and the code execution is complete, copy and 
-#   paste the code from line 274 into the Console. This code will invoke the plotting function. 
+#   paste the code from line 278 into the Console. This code will invoke the plotting function. 
 #   Type one of the three directions (Pitch, Yaw, Roll) to generate the final plot.
 # Step 4: To obtain plots for all three directions, repeat the process by copying and pasting 
-#   the code in line 277 after completing Steps 1 and 2. Enter "Pitch," "Yaw," and "Roll" 
+#   the code in line 281 after completing Steps 1 and 2. Enter "Pitch," "Yaw," and "Roll" 
 #   each time to generate the respective plots.
 
 # 2. Reading
@@ -142,23 +142,23 @@ position_counter <- function(position_list, valid_row, valid_length) {
 ##################################################################################################
 
 Analysis_Func <- function() {
-trying_times <- 0
-trying_limit <- 3 
-
-while (TRUE) {
-    input_val <- readline(prompt = "Please enter the number of apps that need to be analyzed (Integer > 0 Only): ")
+  trying_times <- 0
+  trying_limit <- 3 
   
+  while (TRUE) {
+    input_val <- readline(prompt = "Please enter the number of apps that need to be analyzed (Integer > 0 Only): ")
+    
     num_val <- as.numeric(input_val)
     
     if (!is.na(num_val) && num_val > 0 && num_val == as.integer(num_val)) {
-        break
+      break
     }
     
     trying_times <- trying_times + 1
     if (trying_times == trying_limit) {
       stop("Invalid Number. Too many tries.")
     }
-}
+  }
   app_num <- as.numeric(input_val)
   
   data <- data.frame(
@@ -191,6 +191,9 @@ while (TRUE) {
 ## PART 2: PLOTTING
 ##################################################################################################
 
+## Self Defined Range
+range_list <- list(">25", "20-25", "15-20", "10-15", "5-10", "0-5")
+
 Stacked_Bar_Plotter <- function(apps_list) {
   
   library(ggplot2)
@@ -202,10 +205,10 @@ Stacked_Bar_Plotter <- function(apps_list) {
     stringsAsFactors = FALSE
   )
   
-trying_limit <- 3
-trying_time <- 0
-
-while (TRUE) {
+  trying_limit <- 3
+  trying_time <- 0
+  
+  while (TRUE) {
     direction <- readline(prompt = "Please enter the direction in one word (One of Pitch, Yaw or Roll) eg. Pitch: ")
     
     if (direction == "Pitch") {
@@ -228,7 +231,7 @@ while (TRUE) {
     } else {
       print("Wrong direction name, please remind the capital letters and spellings.")
     }
-}
+  }
   
   # Iterate through each app, calculating the proportion of each action
   for (i in 1:length(apps_list)) {
@@ -241,25 +244,26 @@ while (TRUE) {
     }
     
     # Add proportion data to the data frame
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "0-5", Proportion = app_data[[1]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "5-10", Proportion = app_data[[2]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "10-15", Proportion = app_data[[3]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "15-20", Proportion = app_data[[4]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = "20-25", Proportion = app_data[[5]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = ">25", Proportion = app_data[[6]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[6]], Proportion = app_data[[1]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[5]], Proportion = app_data[[2]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[4]], Proportion = app_data[[3]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[3]], Proportion = app_data[[4]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[2]], Proportion = app_data[[5]] / total_angles))
+    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[1]], Proportion = app_data[[6]] / total_angles))
   }
   
-  data$Range <- factor(data$Range, levels = c("0-5", "5-10", "10-15", "15-20", "20-25", ">25"))
+  data$Range <- factor(data$Range, levels = c(range_list[[1]], range_list[[2]], range_list[[3]], 
+                                              range_list[[4]], range_list[[5]], range_list[[6]]))
   
   ggplot(data, aes(x = App, y = Proportion, fill = Range)) +
     geom_bar(stat = "identity") +
     scale_fill_manual(name = "Range in Degrees", 
-                      values = c("0-5" = "lightskyblue", 
-                                 "5-10" = "deepskyblue", 
-                                 "10-15" = "dodgerblue", 
-                                 "15-20" = "blue", 
-                                 "20-25" = "mediumblue", 
-                                 ">25" = "darkblue")) + 
+                      values = c(">25" = "lightskyblue", 
+                                 "20-25" = "deepskyblue", 
+                                 "15-20" = "dodgerblue", 
+                                 "10-15" = "blue", 
+                                 "5-10" = "mediumblue", 
+                                 "0-5" = "darkblue")) + 
     labs(title = paste("Proportion of Head Movement in Different Angle Ranges \nin the", 
                        direction, 
                        "Direction of Various Apps"),
@@ -275,13 +279,3 @@ apps_list <- Analysis_Func()
 
 ## 3 Times(1 time for each direction, Pitch, Yaw or Roll)
 Stacked_Bar_Plotter(apps_list)
-
-
-
-
-
-
-
-
-
-
