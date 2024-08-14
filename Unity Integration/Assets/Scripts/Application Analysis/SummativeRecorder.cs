@@ -11,11 +11,11 @@ public class SummativeRecorder : MonoBehaviour
 {
     [Header("Data Pipeline Settings")]
     public int participantID = 0;
-    public Condition condition = Condition.NormalBed;
+
     public Apps app = Apps.App0;
     public bool usingEMG = true;
     static EMGLogger_O emgLogger;
-
+    public Condition condition = Condition.NormalBed;
     private FileStream fs;
     private StreamWriter sw;
     OrientationUtility orientationUtility;

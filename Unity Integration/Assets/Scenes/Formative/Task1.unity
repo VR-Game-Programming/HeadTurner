@@ -269,10 +269,10 @@ MonoBehaviour:
   Message: {fileID: 1190142452}
   Cam: {fileID: 278696263}
   Viewport: {fileID: 1542296453}
-  ParticipantID: 16
-  Posture: 1
+  ParticipantID: 1
+  Posture: 0
   MaterialsFolder: Materials
-  ResultFolder: Result
+  ResultFolder: Result F
 --- !u!4 &336128671
 Transform:
   m_ObjectHideFlags: 0
