@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class QuaternionUtility : MonoBehaviour
 {
-    // 
     public static Quaternion AverageRotation(List<Quaternion> multipleRotations)
     {
         int addAmount = 0;
