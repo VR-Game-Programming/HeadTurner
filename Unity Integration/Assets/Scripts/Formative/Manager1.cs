@@ -276,11 +276,6 @@ public class Manager1 : MonoBehaviour
         ready = true;
     }
 
-    public void Redirect()
-    {
-        redirect = true;
-    }
-
     public void OnDestroy()
     {
         sw.Close();

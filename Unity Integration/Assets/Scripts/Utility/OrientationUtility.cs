@@ -103,7 +103,7 @@ public class OrientationUtility : MonoBehaviour
             // roll
             Vector3 neutralYawAxis = Vector3.Cross(rollAxis, calibratedPitchAxis);
             rollAngle = Vector3.SignedAngle(yawAxis, neutralYawAxis, rollAxis);
-            
+
             // visualize the yaw axis (green) and neutral direction (blue) during the game
             Debug.DrawRay(headAnchor.position, yawAxis * 500, Color.green);
             Debug.DrawRay(headAnchor.position, rollAxis * 500, Color.blue);
