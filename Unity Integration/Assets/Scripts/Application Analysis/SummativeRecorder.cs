@@ -18,7 +18,7 @@ public class SummativeRecorder : MonoBehaviour
     public Condition condition = Condition.NormalBed;
     private FileStream fs;
     private StreamWriter sw;
-    OrientationUtility orientationUtility;
+    public OrientationUtility headOT, bodyOT;
     bool isRecording = false;
     public string dirname = "Result S";
     string folder;
@@ -29,8 +29,13 @@ public class SummativeRecorder : MonoBehaviour
         string path = Path.Combine(folder, $"P_{participantID}_{condition}.csv");
         fs = new FileStream(path, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
-        sw.WriteLine("time, Pitch, Yaw, Roll");
-        orientationUtility = FindObjectOfType<OrientationUtility>();
+        sw.WriteLine("time, HeadPitch, HeadYaw, HeadRoll, BodyPitch, BodyYaw, BodyRoll");
+        if (headOT == null|| bodyOT == null)
+        {
+            Debug.LogError("Head or Body OrientationUtility is not set");
+            Application.Quit();
+
+        }
         if (condition == Condition.ActuatedBed)
         {
             FindObjectOfType<HeadController>().enableActuation = true;
@@ -54,7 +59,7 @@ public class SummativeRecorder : MonoBehaviour
     {
         string timeStamp = Time.time.ToString();
 
-        if (orientationUtility.IsCalibrated == false)
+        if (headOT.IsCalibrated == false)
         {
             return;
         }
@@ -70,7 +75,7 @@ public class SummativeRecorder : MonoBehaviour
         }
         if (isRecording)
         {
-            string line = $"{timeStamp}, {orientationUtility.PitchAngle}, {orientationUtility.YawAngle}, {orientationUtility.RollAngle}";
+            string line = $"{timeStamp}, {headOT.PitchAngle}, {headOT.YawAngle}, {headOT.RollAngle}, {bodyOT.PitchAngle}, {bodyOT.YawAngle}, {bodyOT.RollAngle}";
             sw.WriteLine(line);
         }
     }
