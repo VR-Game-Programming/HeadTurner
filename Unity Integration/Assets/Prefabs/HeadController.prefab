@@ -50,6 +50,7 @@ MonoBehaviour:
   orientationUtility: {fileID: 0}
   dOFCommunication: {fileID: 0}
   arduinoCommunication: {fileID: 0}
+  enableActuation: 1
 --- !u!1 &5891413077089299189
 GameObject:
   m_ObjectHideFlags: 0
@@ -94,9 +95,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdfa218a38ba18742bd0e40603104026, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  portName: COM5
+  portName: COM8
   baudRate: 115200
-  motorSpeed: 0.15
+  motorSpeed: 0.45
 --- !u!1 &6056193442160661166
 GameObject:
   m_ObjectHideFlags: 0
@@ -141,7 +142,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e33b34be6356ead49a2f16e3dbdfb2b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  portName: COM12
+  portName: COM9
   baudRate: 500000
   targerLeftMotor: 0
   targetRightMotor: 0

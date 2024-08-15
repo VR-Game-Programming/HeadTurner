@@ -67,14 +67,14 @@
 #define MOTOR_STOP()					analogWrite(PIN_INA, 0 ), analogWrite(PIN_INB, 0 ), digitalWrite(PIN_ENABLE, LOW )
 #define MAX_DUTY						250
 
-#define DEAD_ZONE						50
+#define DEAD_ZONE						30 // 50 for slower motor
 
 #define MOTOR_ENCODER_PPR				2513 // 16(gear ratio)*500(encoder ppr)*4
 
-#define POSITION_CONTROL_P				610
-#define POSITION_CONTROL_I  			52
+#define POSITION_CONTROL_P				6000 // 610, 52, 70, 185 for slower motor
+#define POSITION_CONTROL_I  			100
 #define POSITION_CONTROL_D  			70
-#define POSITION_CONTROL_I_Max			185
+#define POSITION_CONTROL_I_Max			200 
 
 #define AMPLITUDE_DEFAULT				200
 #define PERIOD_DEFAULT_MS				5000.0

@@ -589,7 +589,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e33b34be6356ead49a2f16e3dbdfb2b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  portName: COM3
+  portName: COM9
   baudRate: 500000
   targerLeftMotor: 0
   targetRightMotor: 0

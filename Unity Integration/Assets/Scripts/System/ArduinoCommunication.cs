@@ -9,7 +9,7 @@ public class ArduinoCommunication : MonoBehaviour
 {
     public string portName = "COM8";
     public int baudRate = 115200;
-    const int motorRange = 2000;
+    const int motorRange = 660;
 
     private SerialPort port;
     int targetLinearMotor = 0;
@@ -69,7 +69,7 @@ public class ArduinoCommunication : MonoBehaviour
             {
                 Debug.LogError($"Failed sending command. Log: \n{e}");
             }
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.5f);
         }
     }
     IEnumerator EncoderRead()

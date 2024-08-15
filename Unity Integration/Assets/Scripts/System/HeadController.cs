@@ -12,6 +12,7 @@ public class HeadController : MonoBehaviour
     float yawHeadRelativeToTrunk, pitchAngle;
     float targetPlatformMotor = 0.5f;
     int targetLinearMotor;
+    const float stroke = 1250f / 3; // 1250 for slower moteor
     private void Start()
     {
         // Find the OrientationUtility script in the scene
@@ -50,7 +51,7 @@ public class HeadController : MonoBehaviour
 
             // Head Pitching
             pitchAngle = Mathf.Clamp(orientationUtility.PitchAngle, -45, 45);
-            targetLinearMotor = (int)(1250 * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
+            targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
             arduinoCommunication.TargetLinearMotor = targetLinearMotor;
             //Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString() + "|pitchAngle: " + pitchAngle.ToString());
         }
