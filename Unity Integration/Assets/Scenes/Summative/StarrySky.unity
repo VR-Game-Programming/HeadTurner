@@ -589,7 +589,7 @@ PrefabInstance:
     - target: {fileID: 2833068839556788602, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
       propertyPath: headAnchor
       value: 
-      objectReference: {fileID: 852381577}
+      objectReference: {fileID: 299953673}
     - target: {fileID: 5706189271334748723, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
       propertyPath: m_Name
       value: HeadControl
@@ -2361,7 +2361,7 @@ Transform:
   m_GameObject: {fileID: 1333843101}
   serializedVersion: 2
   m_LocalRotation: {x: 0.17242123, y: 0.30549863, z: -0.21049109, w: 0.9124884}
-  m_LocalPosition: {x: -191.7, y: 208.7, z: -295}
+  m_LocalPosition: {x: -188.4, y: 205.7, z: -289.8}
   m_LocalScale: {x: 5.7719917, y: 5.7719917, z: 5.7719917}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2434,12 +2434,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 13.170003, y: 13.999998, z: 0.20000187}
-  m_Center: {x: -0.0000015497208, y: -0.0000019073486, z: -0.0000076293945}
+  m_Size: {x: 13.170003, y: 31.000656, z: 0.20000187}
+  m_Center: {x: -0.0000048560014, y: -4.9102073, z: 0.000015349662}
 --- !u!114 &1333843105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3443,6 +3443,14 @@ PrefabInstance:
     - target: {fileID: 7350265406976887083, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
       propertyPath: m_Name
       value: SummativeRecorder
+      objectReference: {fileID: 0}
+    - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
+      propertyPath: condition
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
+      propertyPath: participantID
+      value: -1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
