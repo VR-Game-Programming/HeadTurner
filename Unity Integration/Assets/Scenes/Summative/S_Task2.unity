@@ -505,7 +505,7 @@ MonoBehaviour:
   Cam: {fileID: 401709005}
   Viewport: {fileID: 110278254}
   ParticipantID: 1
-  Condition: 0
+  Condition: 1
   enableTrunk: 0
   enableEmg: 0
   MaterialsFolder: Materials
