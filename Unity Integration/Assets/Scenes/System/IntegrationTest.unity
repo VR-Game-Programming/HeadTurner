@@ -2547,6 +2547,10 @@ PrefabInstance:
       propertyPath: headAnchor
       value: 
       objectReference: {fileID: 1235405001}
+    - target: {fileID: 1365373774074596417, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+      propertyPath: orientationUtility
+      value: 
+      objectReference: {fileID: 1150258792566789741}
     - target: {fileID: 2833068839556788602, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
       propertyPath: headAnchor
       value: 
@@ -2608,6 +2612,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+--- !u!114 &1150258792566789741 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2833068839556788602, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+  m_PrefabInstance: {fileID: 1150258792566789740}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2eea22ffa2020cc4fa0c5b7871157d67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

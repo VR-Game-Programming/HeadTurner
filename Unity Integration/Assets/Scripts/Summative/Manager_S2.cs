@@ -37,8 +37,9 @@ public class Manager_S2 : MonoBehaviour
 
     // isRedirect Setting
     private Quaternion StartRotation;
-    private int frameCount = -1;
-    private List<Quaternion> RotationList = new();
+    private Vector3 StartPosition;
+    // private int frameCount = -1;
+    // private List<Quaternion> RotationList = new();
 
     // Data Setting
     public enum ConditionE { NormalBed, ActuatedBed }
@@ -83,6 +84,14 @@ public class Manager_S2 : MonoBehaviour
 
     void Start()
     {
+        if (Condition == ConditionE.ActuatedBed)
+        {
+            FindObjectOfType<HeadController>().enableActuation = true;
+        }
+        else
+        {
+            FindObjectOfType<HeadController>().enableActuation = false;
+        }
         MessageText = Message.GetComponent<TextMeshProUGUI>();
 
         EndArea.transform.position = new Vector3(0, 20, 0);
@@ -136,33 +145,35 @@ public class Manager_S2 : MonoBehaviour
     {
         if (!isRedirect)
         {
-            if (frameCount < 0)
-            {
-                MessageText.text = "按下 [A] 鍵來重新定向";
-                if (OVRInput.GetDown(OVRInput.Button.One))
-                {
-                    frameCount = 0;
-                }
-            }
-            else if (frameCount >= 60) {
-                RotationList.Add(Cam.transform.rotation);
-                StartRotation = QuaternionUtility.AverageRotation(RotationList);
-                Debug.Log("Start Rotation: " + StartRotation.eulerAngles.ToString());
-                Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
-                isRedirect = true;
-            }
-            else {
-                MessageText.text = "校正中...請勿移動";
-                RotationList.Add(Cam.transform.rotation);
-                frameCount ++;
-            }
-
-            // if (OVRInput.GetDown(OVRInput.Button.One)){
-            //     StartRotation = Cam.transform.rotation;
+            // if (frameCount < 0)
+            // {
+            //     MessageText.text = "按下 [A] 鍵來重新定向";
+            //     if (OVRInput.GetDown(OVRInput.Button.One))
+            //     {
+            //         frameCount = 0;
+            //     }
+            // }
+            // else if (frameCount >= 60) {
+            //     RotationList.Add(Cam.transform.rotation);
+            //     StartRotation = QuaternionUtility.AverageRotation(RotationList);
             //     Debug.Log("Start Rotation: " + StartRotation.eulerAngles.ToString());
             //     Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
             //     isRedirect = true;
             // }
+            // else {
+            //     MessageText.text = "校正中...請勿移動";
+            //     RotationList.Add(Cam.transform.rotation);
+            //     frameCount ++;
+            // }
+            MessageText.text = "按下 [A] 鍵來重新定向";
+
+            if (OVRInput.GetDown(OVRInput.Button.One)){
+                StartPosition = Cam.transform.position;
+                StartRotation = Cam.transform.rotation;
+                Viewport.transform.position = StartPosition;
+                Viewport.transform.rotation = StartRotation;
+                isRedirect = true;
+            }
 
             return;
         }
@@ -306,6 +317,7 @@ public class Manager_S2 : MonoBehaviour
             float z = Mathf.Cos(Mathf.Deg2Rad * currentAngle) * radius;
 
             Vector3 rotatedPoint = StartRotation * Quaternion.Euler(0, 0, rotationAngle) * new Vector3(x, 0, z);
+            rotatedPoint += StartPosition;
 
             Track.SetPosition(i, rotatedPoint);
 

@@ -12,11 +12,14 @@ public class HeadController : MonoBehaviour
     float yawHeadRelativeToTrunk, pitchAngle;
     float targetPlatformMotor = 0.5f;
     int targetLinearMotor;
-    const float stroke = 1250f / 3; // 1250 for slower moteor
+    const float stroke = 330f; // 1250 for slower moteor
     private void Start()
     {
         // Find the OrientationUtility script in the scene
-        orientationUtility = FindObjectOfType<OrientationUtility>();
+        if (orientationUtility == null)
+        {
+            orientationUtility = FindObjectOfType<OrientationUtility>();
+        }
         //Find the Communication script in the scene
         dOFCommunication = FindObjectOfType<DOFCommunication>();
         arduinoCommunication = FindObjectOfType<ArduinoCommunication>();
@@ -45,15 +48,17 @@ public class HeadController : MonoBehaviour
             // The error is normalized to the range (-0.5,0.5), then shifted to the range (0,1)
             // targetAngle is mapped from the error of (-90,90) to (0,1)
             // Debug.Log(); // -180 ~ +180
-            targetPlatformMotor = yawHeadRelativeToTrunk / 90 + 0.5f;
+            targetPlatformMotor = yawHeadRelativeToTrunk / 120 + 0.5f;
             targetPlatformMotor = Mathf.Clamp(targetPlatformMotor, 0, 1);
             dOFCommunication.SetMotorPos(targetPlatformMotor, targetPlatformMotor);
 
             // Head Pitching
-            pitchAngle = Mathf.Clamp(orientationUtility.PitchAngle, -45, 45);
+            //pitchAngle = Mathf.Clamp(orientationUtility.PitchAngle, -45, 45);
+            pitchAngle = Mathf.Clamp(orientationUtility.PitchAngle, -45, 20);
             targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
             arduinoCommunication.TargetLinearMotor = targetLinearMotor;
-            //Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString() + "|pitchAngle: " + pitchAngle.ToString());
+            Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString() + "|pitchAngle: " + pitchAngle.ToString());
+            Debug.Log("|targetLinearMotor: " + targetLinearMotor.ToString());
         }
     }
 }

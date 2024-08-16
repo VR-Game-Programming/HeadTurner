@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using System.IO.Ports;
 using System.Threading;
+using UnityEditor.UI;
 
 
 public class Manager_Summative_T1 : MonoBehaviour
@@ -24,6 +25,7 @@ public class Manager_Summative_T1 : MonoBehaviour
     private TextMeshProUGUI MessageText;
     public GameObject Cam;
     public GameObject Viewport;
+    public GameObject TrunkAnchor;
 
     // Game Control
     private bool isRedirect = false;
@@ -37,8 +39,9 @@ public class Manager_Summative_T1 : MonoBehaviour
 
     // Redirect Setting
     private Quaternion StartRotation;
-    private int frameCount = -1;
-    private List<Quaternion> RotationList = new();
+    private Vector3 StartPosition;
+    // private int frameCount = -1;
+    // private List<Quaternion> RotationList = new();
 
     // Data Setting
     public enum ConditionE { NormalBed, ActuatedBed }
@@ -56,8 +59,8 @@ public class Manager_Summative_T1 : MonoBehaviour
     private List<string> DirectionList = new();
 
     // Data Recording
-    private Vector3 StartVector;
-    private float MaxViewingRange;
+    private Vector3 HeadStartVector, TrunkStartVector;
+    private float MaxViewingRange, MaxTrunkRange;
 
     // CSV File Setting
     [Header("File Setting")]
@@ -68,6 +71,14 @@ public class Manager_Summative_T1 : MonoBehaviour
 
     void Start()
     {
+        if (Condition == ConditionE.ActuatedBed)
+        {
+            FindObjectOfType<HeadController>().enableActuation = true;
+        }
+        else
+        {
+            FindObjectOfType<HeadController>().enableActuation = false;
+        }
         MessageText = Message.GetComponent<TextMeshProUGUI>();
 
         // Reading Task Order
@@ -97,7 +108,7 @@ public class Manager_Summative_T1 : MonoBehaviour
         string resultFilePath = Path.Combine(ResultFolder, "Summative_T1_P" + ParticipantID.ToString() + "_" + Condition.ToString() + ".csv");
         fs = new FileStream(resultFilePath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
-        string Header = "Direction,tCount,MaxViewingRange,StartVector,EndVector,StartRotation";
+        string Header = "Direction,tCount,MaxViewingRange,HeadStartVector,HeadEndVector,MaxTrunkRange,TrunkStartVector,TrunkEndVector,StartRotation";
         sw.WriteLine(Header);
     }
 
@@ -105,33 +116,36 @@ public class Manager_Summative_T1 : MonoBehaviour
     {
         if (!isRedirect)
         {
-            if (frameCount < 0)
-            {
-                MessageText.text = "按下 [A] 鍵來重新定向";
-                if (OVRInput.GetDown(OVRInput.Button.One))
-                {
-                    frameCount = 0;
-                }
-            }
-            else if (frameCount >= 60) {
-                RotationList.Add(Cam.transform.rotation);
-                StartRotation = QuaternionUtility.AverageRotation(RotationList);
-                Debug.Log("Start Rotation: " + StartRotation.eulerAngles.ToString());
-                Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
-                isRedirect = true;
-            }
-            else {
-                MessageText.text = "校正中...請勿移動";
-                RotationList.Add(Cam.transform.rotation);
-                frameCount ++;
-            }
-
-            // if (OVRInput.GetDown(OVRInput.Button.One)){
-            //     StartRotation = Cam.transform.rotation;
+            // if (frameCount < 0)
+            // {
+            //     MessageText.text = "按下 [A] 鍵來重新定向";
+            //     if (OVRInput.GetDown(OVRInput.Button.One))
+            //     {
+            //         frameCount = 0;
+            //     }
+            // }
+            // else if (frameCount >= 60) {
+            //     RotationList.Add(Cam.transform.rotation);
+            //     StartRotation = QuaternionUtility.AverageRotation(RotationList);
             //     Debug.Log("Start Rotation: " + StartRotation.eulerAngles.ToString());
-            //     Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
+            //     Viewport.transform.rotation = StartRotation;
+            //     // Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
             //     isRedirect = true;
             // }
+            // else {
+            //     MessageText.text = "校正中...請勿移動";
+            //     RotationList.Add(Cam.transform.rotation);
+            //     frameCount ++;
+            // }
+            MessageText.text = "按下 [A] 鍵來重新定向";
+
+            if (OVRInput.GetDown(OVRInput.Button.One)){
+                StartPosition = Cam.transform.position;
+                StartRotation = Cam.transform.rotation;
+                Viewport.transform.position = StartPosition;
+                Viewport.transform.rotation = StartRotation;
+                isRedirect = true;
+            }
 
             return;
         }
@@ -180,15 +194,14 @@ public class Manager_Summative_T1 : MonoBehaviour
                 Track.endColor = completeColor;
 
                 // log data
-                Vector3 EndVector = Camera.main.transform.forward;
-                MaxViewingRange = Vector3.SignedAngle(StartVector, EndVector, Vector3.up);
+                Vector3 HeadEndVector = Camera.main.transform.forward;
+                MaxViewingRange = Vector3.SignedAngle(HeadStartVector, HeadEndVector, Vector3.up);
 
-                // if (count >= 0 && count < DirectionList.Count) {
-                string Data = DirectionList[count].ToString() + ',' + tcount.ToString() + ','
-                    + MaxViewingRange.ToString() + ',' + StartVector.ToString().Replace(",", "*") + ',' + EndVector.ToString().Replace(",", "*") + ',' + StartRotation.eulerAngles.ToString().Replace(",", "*");
+                Vector3 TrunkEndVector = TrunkAnchor.transform.forward;
+                MaxTrunkRange = Vector3.SignedAngle(TrunkStartVector, TrunkEndVector, Vector3.up);
 
+                string Data = $"{DirectionList[count]},{tcount},{MaxViewingRange},{HeadStartVector.ToString().Replace(",", "*")},{HeadEndVector.ToString().Replace(",", "*")},{MaxTrunkRange},{TrunkStartVector.ToString().Replace(",", "*")},{TrunkEndVector.ToString().Replace(",", "*")},{StartRotation.eulerAngles.ToString().Replace(",", "*")}";
                 sw.WriteLine(Data);
-                // }
 
                 tcount ++;
                 if (tcount > 3) {
@@ -214,7 +227,8 @@ public class Manager_Summative_T1 : MonoBehaviour
 
                     MessageText.text = "請沿著軌道方向旋轉到最大距離\n按下 [A] 鍵來結束測試";
 
-                    StartVector = Camera.main.transform.forward;
+                    HeadStartVector = Camera.main.transform.forward;
+                    TrunkStartVector = TrunkAnchor.transform.forward;
 
                     isTesting = true;
                 }
@@ -252,6 +266,7 @@ public class Manager_Summative_T1 : MonoBehaviour
             float z = Mathf.Cos(Mathf.Deg2Rad * currentAngle) * radius;
 
             Vector3 rotatedPoint = StartRotation * Quaternion.Euler(0, 0, rotationAngle) * new Vector3(x, 0, z);
+            rotatedPoint += StartPosition;
 
             Track.SetPosition(i, rotatedPoint);
 
