@@ -6,13 +6,13 @@ using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
 using UnityEngine.UI;
 public enum Condition { NormalBed, ActuatedBed }
-public enum Apps { App0, App1 }
+public enum Apps { Ecosphere, Archery }
 public class SummativeRecorder : MonoBehaviour
 {
     [Header("Data Pipeline Settings")]
     public int participantID = 0;
 
-    public Apps app = Apps.App0;
+    public Apps app = Apps.Ecosphere;
     public bool usingEMG = true;
     static EMGLogger_O emgLogger;
     public Condition condition = Condition.NormalBed;
@@ -30,7 +30,7 @@ public class SummativeRecorder : MonoBehaviour
         fs = new FileStream(path, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
         sw.WriteLine("time, HeadPitch, HeadYaw, HeadRoll, BodyPitch, BodyYaw, BodyRoll");
-        if (headOT == null|| bodyOT == null)
+        if (headOT == null || bodyOT == null)
         {
             Debug.LogError("Head or Body OrientationUtility is not set");
             Application.Quit();
@@ -63,7 +63,7 @@ public class SummativeRecorder : MonoBehaviour
         {
             return;
         }
-        if (Input.GetKeyDown(KeyCode.Space) && !isRecording)
+        if ((Input.GetKeyDown(KeyCode.Space) || headOT.IsCalibrated == true) && !isRecording)
         {
             Debug.Log("Recording started");
             isRecording = !isRecording;

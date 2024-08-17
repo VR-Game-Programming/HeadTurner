@@ -18,11 +18,11 @@ public class Manager_S2 : MonoBehaviour
 
     // Objects
     public GameObject EndArea;
-    public GameObject TrunkAnchor;
     public GameObject Message;
     private TextMeshProUGUI MessageText;
     public GameObject Cam;
     public GameObject Viewport;
+    public OrientationUtility headOT, bodyOT;
 
     // Game Control
     private bool isRedirect = false;
@@ -38,8 +38,6 @@ public class Manager_S2 : MonoBehaviour
     // isRedirect Setting
     private Quaternion StartRotation;
     private Vector3 StartPosition;
-    // private int frameCount = -1;
-    // private List<Quaternion> RotationList = new();
 
     // Data Setting
     public enum ConditionE { NormalBed, ActuatedBed }
@@ -66,9 +64,6 @@ public class Manager_S2 : MonoBehaviour
     // Data Recording
     private float Interval = 0.02f;
     private float Timer = 0f;
-    private Vector3 HeadStartVector;
-    private Vector3 TrunkStartVector;
-    private float timestamp, hPitch, hYaw, tPitch, tYaw;
 
     // CSV File Setting
     [Header("File Setting")]
@@ -120,10 +115,10 @@ public class Manager_S2 : MonoBehaviour
         }
 
         // Setting Result File
-        string resultFilePath = Path.Combine(ResultFolder, "Summative_O3_P" + ParticipantID.ToString() + "_" + Condition.ToString() + ".csv");
+        string resultFilePath = Path.Combine(ResultFolder, "Summative_T2_P" + ParticipantID.ToString() + "_" + Condition.ToString() + ".csv");
         fs = new FileStream(resultFilePath, FileMode.OpenOrCreate);
         sw = new StreamWriter(fs);
-        string Header = "Direction,tCount,Time,HeadRotation,HeadPitch,HeadYaw,TrunkRotation,TrunkPitch,TrunkYaw,StartRotation";
+        string Header = "Direction,tCount,Time,HeadPitch,HeadYaw,HeadRoll,BodyPitch,BodyYaw,BodyRoll";
         sw.WriteLine(Header);
 
         string incompleteTaskFilePath = Path.Combine(ResultFolder, "Summative_T2_P" + ParticipantID.ToString() + "_" + Condition.ToString() + "_Incomplete.csv");
@@ -144,26 +139,6 @@ public class Manager_S2 : MonoBehaviour
     {
         if (!isRedirect)
         {
-            // if (frameCount < 0)
-            // {
-            //     MessageText.text = "按下 [A] 鍵來重新定向";
-            //     if (OVRInput.GetDown(OVRInput.Button.One))
-            //     {
-            //         frameCount = 0;
-            //     }
-            // }
-            // else if (frameCount >= 60) {
-            //     RotationList.Add(Cam.transform.rotation);
-            //     StartRotation = QuaternionUtility.AverageRotation(RotationList);
-            //     Debug.Log("Start Rotation: " + StartRotation.eulerAngles.ToString());
-            //     Viewport.transform.Rotate(StartRotation.eulerAngles.x, StartRotation.eulerAngles.y, StartRotation.eulerAngles.z, Space.World);
-            //     isRedirect = true;
-            // }
-            // else {
-            //     MessageText.text = "校正中...請勿移動";
-            //     RotationList.Add(Cam.transform.rotation);
-            //     frameCount ++;
-            // }
             MessageText.text = "按下 [A] 鍵來重新定向";
 
             if (OVRInput.GetDown(OVRInput.Button.One)){
@@ -272,8 +247,6 @@ public class Manager_S2 : MonoBehaviour
 
                     MessageText.text = "請沿著軌道方向旋轉到終點\n如果無法轉到，請按下 [B] 鍵來結束測試";
 
-                    HeadStartVector = Camera.main.transform.forward;
-                    TrunkStartVector = TrunkAnchor.transform.forward;
                     if (enableEmg) _emg_logger.start_logging(rotationAngle.ToString(), Condition.ToString());
 
                     isTesting = true;
@@ -368,23 +341,9 @@ public class Manager_S2 : MonoBehaviour
         {
             Timer = Interval;
 
-            timestamp = Time.time;
-
-            Quaternion HeadDiffRotation = Camera.main.transform.rotation * Quaternion.Inverse(StartRotation);
-            hPitch = HeadDiffRotation.eulerAngles.x;
-            hYaw = HeadDiffRotation.eulerAngles.y;
-
-            Quaternion TrunkDiffRotation = TrunkAnchor.transform.rotation * Quaternion.Inverse(StartRotation);
-            tPitch = TrunkDiffRotation.eulerAngles.x;
-            tYaw = TrunkDiffRotation.eulerAngles.y;
-
             if (count >= 0 && count < DirectionList.Count)
-            {
-                string Data = DirectionList[count].ToString() + "," + tcount.ToString() + "," + timestamp.ToString() + ","
-                    + Camera.main.transform.rotation.eulerAngles.ToString().Replace(",", "*") + "," + hPitch.ToString() + "," + hYaw.ToString() + ","
-                    + TrunkAnchor.transform.rotation.eulerAngles.ToString().Replace(",", "*") + "," + tPitch.ToString() + "," + tYaw.ToString() + ","
-                    + StartRotation.eulerAngles.ToString().Replace(",", "*");
-
+            {                
+                string Data = $"{DirectionList[count]},{tcount},{Time.time},{headOT.PitchAngle},{headOT.YawAngle},{headOT.RollAngle},{bodyOT.PitchAngle},{bodyOT.YawAngle},{bodyOT.RollAngle}";
                 sw.WriteLine(Data);
             }
         }

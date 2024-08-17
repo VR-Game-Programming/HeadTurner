@@ -279,9 +279,9 @@ MonoBehaviour:
   Message: {fileID: 1190142452}
   Cam: {fileID: 1725543718}
   Viewport: {fileID: 1542296453}
-  TrunkAnchor: {fileID: 370011473}
-  ParticipantID: 16
-  Condition: 0
+  BodyAnchor: {fileID: 370011473}
+  ParticipantID: 2
+  Condition: 1
   enableEmg: 1
   MaterialsFolder: Materials
   ResultFolder: Result S
