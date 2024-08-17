@@ -61,7 +61,6 @@ public class Manager_S2 : MonoBehaviour
     public int ParticipantID = 0;
     public ConditionE Condition = ConditionE.NormalBed;
     private List<string> DirectionList = new();
-    public bool enableTrunk = false;
     public bool enableEmg = false;
 
     // Data Recording
@@ -136,7 +135,7 @@ public class Manager_S2 : MonoBehaviour
         // Emg
         if (enableEmg)
         {
-            string emg_folder = Path.Combine(ResultFolder, "emg_data", "Summative_O3_P" + ParticipantID.ToString() + "_" + Condition.ToString());
+            string emg_folder = Path.Combine(ResultFolder, "emg_data", "Summative_T2_P" + ParticipantID.ToString() + "_" + Condition.ToString());
             _emg_logger = new EMGLogger_O(dirname: emg_folder);
         }
     }
@@ -274,8 +273,7 @@ public class Manager_S2 : MonoBehaviour
                     MessageText.text = "請沿著軌道方向旋轉到終點\n如果無法轉到，請按下 [B] 鍵來結束測試";
 
                     HeadStartVector = Camera.main.transform.forward;
-
-                    if (enableTrunk) TrunkStartVector = TrunkAnchor.transform.forward;
+                    TrunkStartVector = TrunkAnchor.transform.forward;
                     if (enableEmg) _emg_logger.start_logging(rotationAngle.ToString(), Condition.ToString());
 
                     isTesting = true;
@@ -371,21 +369,14 @@ public class Manager_S2 : MonoBehaviour
             Timer = Interval;
 
             timestamp = Time.time;
+
             Quaternion HeadDiffRotation = Camera.main.transform.rotation * Quaternion.Inverse(StartRotation);
             hPitch = HeadDiffRotation.eulerAngles.x;
-            // turn down positive, turn up negative
-            if (hPitch > 180) hPitch -= 360;
             hYaw = HeadDiffRotation.eulerAngles.y;
-            // turn left positive, turn right negative
-            if (hYaw > 180) hYaw -= 360;
 
-            if (enableTrunk) {
-                Quaternion TrunkDiffRotation = TrunkAnchor.transform.rotation * Quaternion.Inverse(StartRotation);
-                tPitch = TrunkDiffRotation.eulerAngles.x;
-                if (tPitch > 180) tPitch -= 360;
-                tYaw = TrunkDiffRotation.eulerAngles.y;
-                if (tYaw > 180) tYaw -= 360;
-            }
+            Quaternion TrunkDiffRotation = TrunkAnchor.transform.rotation * Quaternion.Inverse(StartRotation);
+            tPitch = TrunkDiffRotation.eulerAngles.x;
+            tYaw = TrunkDiffRotation.eulerAngles.y;
 
             if (count >= 0 && count < DirectionList.Count)
             {

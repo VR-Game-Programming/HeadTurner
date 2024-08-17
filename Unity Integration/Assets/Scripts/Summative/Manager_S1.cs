@@ -57,6 +57,7 @@ public class Manager_Summative_T1 : MonoBehaviour
     public int ParticipantID = 0;
     public ConditionE Condition = ConditionE.NormalBed;
     private List<string> DirectionList = new();
+    public bool enableEmg = false;
 
     // Data Recording
     private Vector3 HeadStartVector, TrunkStartVector;
@@ -68,6 +69,9 @@ public class Manager_Summative_T1 : MonoBehaviour
     public string ResultFolder = @"Result S";
     private FileStream fs;
     private StreamWriter sw;
+
+    // Emg
+    private EMGLogger_O _emg_logger;
 
     void Start()
     {
@@ -110,6 +114,13 @@ public class Manager_Summative_T1 : MonoBehaviour
         sw = new StreamWriter(fs);
         string Header = "Direction,tCount,MaxViewingRange,HeadStartVector,HeadEndVector,MaxTrunkRange,TrunkStartVector,TrunkEndVector,StartRotation";
         sw.WriteLine(Header);
+    
+        // Emg
+        if (enableEmg)
+        {
+            string emg_folder = Path.Combine(ResultFolder, "emg_data", "Summative_T1_P" + ParticipantID.ToString() + "_" + Condition.ToString());
+            _emg_logger = new EMGLogger_O(dirname: emg_folder);
+        }
     }
 
     void Update()
@@ -162,6 +173,7 @@ public class Manager_Summative_T1 : MonoBehaviour
                 // close log file
                 sw.Close();
                 fs.Close();
+                if (enableEmg) _emg_logger.close();
                 return;
             }
 
@@ -203,6 +215,8 @@ public class Manager_Summative_T1 : MonoBehaviour
                 string Data = $"{DirectionList[count]},{tcount},{MaxViewingRange},{HeadStartVector.ToString().Replace(",", "*")},{HeadEndVector.ToString().Replace(",", "*")},{MaxTrunkRange},{TrunkStartVector.ToString().Replace(",", "*")},{TrunkEndVector.ToString().Replace(",", "*")},{StartRotation.eulerAngles.ToString().Replace(",", "*")}";
                 sw.WriteLine(Data);
 
+                if (enableEmg) _emg_logger.end_logging();
+
                 tcount ++;
                 if (tcount > 3) {
                     // Enter rest section
@@ -229,6 +243,8 @@ public class Manager_Summative_T1 : MonoBehaviour
 
                     HeadStartVector = Camera.main.transform.forward;
                     TrunkStartVector = TrunkAnchor.transform.forward;
+
+                    if (enableEmg) _emg_logger.start_logging(rotationAngle.ToString(), Condition.ToString());
 
                     isTesting = true;
                 }
@@ -297,5 +313,6 @@ public class Manager_Summative_T1 : MonoBehaviour
     {
         sw.Close();
         fs.Close();
+        if (enableEmg) _emg_logger.close();
     }
 }

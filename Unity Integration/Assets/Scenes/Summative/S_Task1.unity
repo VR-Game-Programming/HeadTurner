@@ -282,6 +282,7 @@ MonoBehaviour:
   TrunkAnchor: {fileID: 370011473}
   ParticipantID: 16
   Condition: 0
+  enableEmg: 1
   MaterialsFolder: Materials
   ResultFolder: Result S
 --- !u!1001 &370011471
