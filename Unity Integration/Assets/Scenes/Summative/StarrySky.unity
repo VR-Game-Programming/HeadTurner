@@ -3444,13 +3444,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: SummativeRecorder
       objectReference: {fileID: 0}
+    - target: {fileID: 7350265406976887083, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
       propertyPath: condition
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
       propertyPath: participantID
-      value: -1
+      value: -2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

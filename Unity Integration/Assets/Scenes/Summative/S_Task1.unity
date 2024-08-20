@@ -280,8 +280,8 @@ MonoBehaviour:
   Cam: {fileID: 1725543718}
   Viewport: {fileID: 1542296453}
   BodyAnchor: {fileID: 370011473}
-  ParticipantID: 5
-  Condition: 1
+  ParticipantID: 11
+  Condition: 0
   enableEmg: 1
   MaterialsFolder: Materials
   ResultFolder: Result S
@@ -342,11 +342,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
---- !u!4 &370011472 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2452106846824428252, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-  m_PrefabInstance: {fileID: 370011471}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &370011473 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8725537646645423721, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
@@ -1142,6 +1137,11 @@ Transform:
   - {fileID: 298211073}
   m_Father: {fileID: 2112885854}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &2038198444 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2452106846824428252, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+  m_PrefabInstance: {fileID: 370011471}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2091293188
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1157,7 +1157,7 @@ PrefabInstance:
     - target: {fileID: 2833068839556788602, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
       propertyPath: headAnchor
       value: 
-      objectReference: {fileID: 370011472}
+      objectReference: {fileID: 2038198444}
     - target: {fileID: 5706189271334748723, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
       propertyPath: m_Name
       value: HeadController
