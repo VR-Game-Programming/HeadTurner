@@ -67,7 +67,7 @@
 #define MOTOR_STOP()					analogWrite(PIN_INA, 0 ), analogWrite(PIN_INB, 0 ), digitalWrite(PIN_ENABLE, LOW )
 #define MAX_DUTY						250
 
-#define DEAD_ZONE						17 // 50 for slower motor
+#define DEAD_ZONE						20 // 50 for slower motor
 
 #define MOTOR_ENCODER_PPR				680 // 16(gear ratio)*500(encoder ppr)*4
 

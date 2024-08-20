@@ -48,7 +48,7 @@ public class HeadController : MonoBehaviour
             // The error is normalized to the range (-0.5,0.5), then shifted to the range (0,1)
             // targetAngle is mapped from the error of (-90,90) to (0,1)
             // Debug.Log(); // -180 ~ +180
-            targetPlatformMotor = yawHeadRelativeToTrunk / 120 + 0.5f;
+            targetPlatformMotor = yawHeadRelativeToTrunk / 160 + 0.5f;
             targetPlatformMotor = Mathf.Clamp(targetPlatformMotor, 0, 1);
             dOFCommunication.SetMotorPos(targetPlatformMotor, targetPlatformMotor);
 

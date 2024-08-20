@@ -201,7 +201,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
       propertyPath: condition
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
       propertyPath: participantID

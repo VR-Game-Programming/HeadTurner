@@ -69,7 +69,7 @@ public class ArduinoCommunication : MonoBehaviour
             {
                 Debug.LogError($"Failed sending command. Log: \n{e}");
             }
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.1f);
         }
     }
     IEnumerator EncoderRead()

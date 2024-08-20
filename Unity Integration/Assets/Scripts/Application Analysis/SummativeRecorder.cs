@@ -51,7 +51,7 @@ public class SummativeRecorder : MonoBehaviour
             {
                 string emg_folder = Path.Combine(folder, "emg_data", $"P_{participantID}_{condition}");
                 emgLogger = new EMGLogger_O(dirname: emg_folder);
-                Debug.Log("EMGLogger_O created");
+                //Debug.Log("EMGLogger_O created");
             }
         }
     }
@@ -65,12 +65,12 @@ public class SummativeRecorder : MonoBehaviour
         }
         if ((Input.GetKeyDown(KeyCode.Space) || headOT.IsCalibrated == true) && !isRecording)
         {
-            Debug.Log("Recording started");
+            //Debug.Log(app.ToString() + "Recording started");
             isRecording = !isRecording;
             if (usingEMG)
             {
                 emgLogger.start_logging(app.ToString(), condition.ToString());
-                Debug.Log(app.ToString() + " start logging");
+                //Debug.Log("EMG start logging");
             }
         }
         if (isRecording)
