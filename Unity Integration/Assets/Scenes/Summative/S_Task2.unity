@@ -429,8 +429,8 @@ MonoBehaviour:
   Viewport: {fileID: 110278254}
   headOT: {fileID: 805604352}
   bodyOT: {fileID: 1671656460}
-  ParticipantID: 11
-  Condition: 0
+  ParticipantID: 13
+  Condition: 1
   enableEmg: 1
   MaterialsFolder: Materials
   ResultFolder: Result S

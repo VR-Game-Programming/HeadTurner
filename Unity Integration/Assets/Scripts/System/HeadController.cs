@@ -57,8 +57,8 @@ public class HeadController : MonoBehaviour
             pitchAngle = Mathf.Clamp(orientationUtility.PitchAngle, -45, 20);
             targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
             arduinoCommunication.TargetLinearMotor = targetLinearMotor;
-            Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString() + "|pitchAngle: " + pitchAngle.ToString());
-            Debug.Log("|targetLinearMotor: " + targetLinearMotor.ToString());
+            // Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString() + "|pitchAngle: " + pitchAngle.ToString());
+            // Debug.Log("|targetLinearMotor: " + targetLinearMotor.ToString());
         }
     }
 }
