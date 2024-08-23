@@ -280,7 +280,7 @@ MonoBehaviour:
   Cam: {fileID: 1725543718}
   Viewport: {fileID: 1542296453}
   BodyAnchor: {fileID: 370011473}
-  ParticipantID: 16
+  ParticipantID: 11
   Condition: 0
   enableEmg: 1
   MaterialsFolder: Materials

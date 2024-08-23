@@ -193,7 +193,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
       propertyPath: app
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
       propertyPath: usingEMG
@@ -201,11 +201,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
       propertyPath: condition
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8133383218402828688, guid: 2bc29480da054f2428d33118e49452bd, type: 3}
       propertyPath: participantID
-      value: 16
+      value: 11
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
