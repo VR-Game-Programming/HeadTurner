@@ -10,15 +10,15 @@
 # 1. Using
 # Step 1: To use the code to draw stacked bar charts, you need to copy the code from 
 #   the handle_outliers function to the Stacked_Bar_Plotter function, which spans from 
-#   line 51 to 273 (inclusive), and paste it into the Console. Ensure that you have 
+#   line 51 to 362 (inclusive), and paste it into the Console. Ensure that you have 
 #   RStudio installed; if not, please refer to the readme.txt file. These are the 
 #   functions needed to analyze the data and generate the graph.
-# Step 2: Next, copy and paste the code in line 261 into the Console. This will invoke 
+# Step 2: Next, copy and paste the code in line 367 into the Console. This will invoke 
 #   the categorization code. A prompt will appear in the Console asking you to enter the number 
 #   of apps you wish to analyze. After entering this number, open the .csv files one by one,
 #   make sure that the name of your files is the corresponding name of the apps.
 # Step 3: Once all the files have been opened and the code execution is complete, copy and 
-#   paste the code from line 278 into the Console. This code will invoke the plotting function. 
+#   paste the code from line 370 into the Console. This code will invoke the plotting function. 
 #   Type one of the three directions (Pitch, Yaw, Roll) to generate the final plot.
 # Step 4: To obtain plots for all three directions, repeat the process by copying and pasting 
 #   the code in line 281 after completing Steps 1 and 2. Enter "Pitch," "Yaw," and "Roll" 
@@ -137,16 +137,53 @@ position_counter <- function(position_list, valid_row, valid_length) {
   return(pack_list)
 }
 
+
+
 ##################################################################################################
 ## PART 1.2: CATEGORIZATION IMPLEMENTATION
 ##################################################################################################
 
-Analysis_Func <- function() {
+## Deals with one direction of many users' total when using one same app.
+Adder <- function(user_list, dir_idx, users_num) {
+  sum_list <- list(0,0,0,0,0,0)
+  for (i in 1:users_num) {
+    for (j in 1:6) {
+      sum_list[[j]] <- sum_list[[j]] + user_list[[i]][[dir_idx]][[j]]
+    }
+  }
+  return(sum_list)
+}
+
+## Deals with one direction of many users' average when using one same app.
+Average_Calculator <- function(sum_list, user_num) {
+  for (i in 1:6) {
+    sum_list[[i]] <- sum_list[[i]] / user_num
+  }
+  return(sum_list)
+}
+
+## Combines three directions of many users' average when using one same app into one list.
+Average_Counter <- function(user_list) {
+  user_num <- length(user_list)
+  average_list <- list()
+  pitch_total <- Adder(user_list, 1, user_num)
+  yaw_total <- Adder(user_list, 2, user_num)
+  roll_total <- Adder(user_list, 3, user_num)    
+  
+  pitch_average <- Average_Calculator(pitch_total, user_num)
+  yaw_average <- Average_Calculator(yaw_total, user_num)
+  roll_average <- Average_Calculator(roll_total, user_num)
+  
+  return(list(pitch_average, yaw_average, roll_average))
+  
+}
+
+Analysis_Average_Func <- function() {
+  
   trying_times <- 0
   trying_limit <- 3 
-  
   while (TRUE) {
-    input_val <- readline(prompt = "Please enter the number of apps that need to be analyzed (Integer > 0 Only): ")
+    input_val <- readline(prompt = "Please enter the number of users that need to be analyzed (Integer > 0 Only): ")
     
     num_val <- as.numeric(input_val)
     
@@ -158,34 +195,56 @@ Analysis_Func <- function() {
     if (trying_times == trying_limit) {
       stop("Invalid Number. Too many tries.")
     }
-  }
-  app_num <- as.numeric(input_val)
+  } 
+  user_num <- as.numeric(input_val)
   
-  data <- data.frame(
-    App = character(),
-    Range = character(),
-    Proportion = numeric(),
-    stringsAsFactors = FALSE
-  )
-  apps_list <- list()
-  
-  for (i in 1:app_num) {
-    f <- file.choose()
-    app_data <- read.csv(f)
-    app_name <- tools::file_path_sans_ext(basename(f))
-    
-    pitch_data <- app_data$Pitch[1:length(app_data$Pitch)]
-    yaw_data <- app_data$Yaw[1:length(app_data$Yaw)]
-    roll_data <- app_data$Roll[1:length(app_data$Roll)]
-    app_time <- app_data$time[1:length(app_data$time)]
-    valid_data_length <- length(app_time)
-    
-    app_pack_list <- position_counter(list(pitch_data, yaw_data, roll_data), 1, valid_data_length)
-    app_pack_list <- append(app_pack_list, app_name)
-    apps_list <- append(apps_list, list(app_pack_list))
+  app_name <- ""
+  while (TRUE) {
+    app_name <- readline(prompt = "Please enter the app's name: ")
+    change_input <- readline(prompt = "Do you want to change the app's name? Enter 'no' if you don't: ")
+    if (tolower(change_input) == "no") {
+      break
+    }
   }
-  return(apps_list)
+  
+  status_list <- list()
+  
+  for (j in 1:2) {
+    user_list <- list()
+    
+    if (j == 1) {
+      print("Choose files when Head Turner is on.")
+    }
+    else {
+      print("Choose files when Head Turner is off.")
+    }
+    
+    for (i in 1:user_num) {
+      print(paste("Current: ", i))
+      f <- file.choose()
+      app_data <- read.csv(f)
+      
+      pitch_data <- app_data$BodyPitch
+      yaw_data <- app_data$BodyYaw
+      roll_data <- app_data$BodyRoll
+      app_time <- app_data$time
+      
+      valid_data_length <- length(app_time)
+      
+      app_pack_list <- position_counter(list(pitch_data, yaw_data, roll_data), 1, valid_data_length)
+      user_list[[i]] <- app_pack_list
+    }
+    
+    one_status_count <- Average_Counter(user_list)
+    status_list[[j]] <- one_status_count
+  }
+  
+  status_list[[3]] <- app_name
+  return(status_list)
 }
+
+
+
 
 ##################################################################################################
 ## PART 2: PLOTTING
@@ -194,8 +253,9 @@ Analysis_Func <- function() {
 ## Self Defined Range
 range_list <- list(">25", "20-25", "15-20", "10-15", "5-10", "0-5")
 
-Stacked_Bar_Plotter <- function(apps_list) {
-  
+Stacked_Bar_Plotter <- function(status_list) {
+  app_name <- status_list[[3]][[1]]
+  status <- ""
   library(ggplot2)
   # Create an empty data frame to store the counts
   data <- data.frame(
@@ -205,21 +265,21 @@ Stacked_Bar_Plotter <- function(apps_list) {
     stringsAsFactors = FALSE
   )
   
+  
   trying_limit <- 3
   trying_time <- 0
   
   while (TRUE) {
-    direction <- readline(prompt = "Please enter the direction in one word (One of Pitch, Yaw or Roll) eg. Pitch: ")
-    
-    if (direction == "Pitch") {
+    direction <- readline(prompt = "Please enter the direction in one word (One of pitch, yaw or roll) eg. pitch: ")
+    if (tolower(direction) == "pitch") {
       dir_idx <- 1
       break
     }
-    else if (direction == "Yaw") {
+    else if (tolower(direction) == "yaw") {
       dir_idx <- 2
       break
     }
-    else if (direction == "Roll") {
+    else if (tolower(direction) == "roll") {
       dir_idx <- 3
       break
     }
@@ -229,44 +289,73 @@ Stacked_Bar_Plotter <- function(apps_list) {
     if (trying_time == trying_limit) {
       stop("Wrong direction name. Too many tries.")
     } else {
-      print("Wrong direction name, please remind the capital letters and spellings.")
+      print("Wrong direction name, please enter one of pitch, yaw or roll.")
     }
+  }
+  trying_limit <- 3
+  trying_time <- 0
+  while (TRUE) {
+    part <- readline(prompt = "Is this head movement or body movement? (Enter either 'head' or 'body'): ")
+    if (tolower(part) == "head") {
+      part <- "Head"
+      break
+    }
+    else if (tolower(part) == "body") {
+      part <- "Body"
+      break
+    }
+    trying_time <- trying_time + 1
+    
+    if (trying_time == trying_limit) {
+      stop("Wrong part name. Too many tries.")
+    } else {
+      print("Wrong part name, please enter either 'head' or 'body'")
+    }
+    
   }
   
   # Iterate through each app, calculating the proportion of each action
-  for (i in 1:length(apps_list)) {
-    app_data <- apps_list[[i]][[dir_idx]] 
+  for (i in 1:2) {
+    if (i == 1) {
+      status <- "On"
+    }
+    else {
+      status <- "Off"
+    }
+    app_data <- status_list[[i]][[dir_idx]] 
     
     total_angles <- sum(unlist(app_data))
     
     if (total_angles == 0) {
       total_angles <- 1 
     }
-    
     # Add proportion data to the data frame
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[6]], Proportion = app_data[[1]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[5]], Proportion = app_data[[2]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[4]], Proportion = app_data[[3]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[3]], Proportion = app_data[[4]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[2]], Proportion = app_data[[5]] / total_angles))
-    data <- rbind(data, data.frame(App = apps_list[[i]][[4]], Range = range_list[[1]], Proportion = app_data[[6]] / total_angles))
+    data <- rbind(data, data.frame(App = status, Range = range_list[[6]], Proportion = app_data[[1]] / total_angles))
+    data <- rbind(data, data.frame(App = status, Range = range_list[[5]], Proportion = app_data[[2]] / total_angles))
+    data <- rbind(data, data.frame(App = status, Range = range_list[[4]], Proportion = app_data[[3]] / total_angles))
+    data <- rbind(data, data.frame(App = status, Range = range_list[[3]], Proportion = app_data[[4]] / total_angles))
+    data <- rbind(data, data.frame(App = status, Range = range_list[[2]], Proportion = app_data[[5]] / total_angles))
+    data <- rbind(data, data.frame(App = status, Range = range_list[[1]], Proportion = app_data[[6]] / total_angles))
   }
-  
   data$Range <- factor(data$Range, levels = c(range_list[[1]], range_list[[2]], range_list[[3]], 
                                               range_list[[4]], range_list[[5]], range_list[[6]]))
   
   ggplot(data, aes(x = App, y = Proportion, fill = Range)) +
     geom_bar(stat = "identity") +
     scale_fill_manual(name = "Range in Degrees", 
-                      values = c(">25" = "lightskyblue", 
-                                 "20-25" = "deepskyblue", 
-                                 "15-20" = "dodgerblue", 
-                                 "10-15" = "blue", 
-                                 "5-10" = "mediumblue", 
-                                 "0-5" = "darkblue")) + 
-    labs(title = paste("Proportion of Head Movement in Different Angle Ranges \nin the", 
+                      values = c(">25" = "darkblue", 
+                                 "20-25" = "mediumblue", 
+                                 "15-20" = "blue", 
+                                 "10-15" = "dodgerblue", 
+                                 "5-10" = "deepskyblue", 
+                                 "0-5" = "lightskyblue")) + 
+    labs(title = paste("Proportion of",
+                       part,
+                       "Movement in Different Angle Ranges \nin the", 
                        direction, 
-                       "Direction of Various Apps"),
+                       "Direction When Using App named ",
+                       app_name,
+                       "Comparing Head Turner is On or Off"),
          x = "App",
          y = "Proportion") +
     theme_minimal()
@@ -275,7 +364,7 @@ Stacked_Bar_Plotter <- function(apps_list) {
 ##################################################################################################
 ## Envoking Functions Above
 ## 1 Time
-apps_list <- Analysis_Func()
+status_list <- Analysis_Average_Func()
 
 ## 3 Times(1 time for each direction, Pitch, Yaw or Roll)
-Stacked_Bar_Plotter(apps_list)
+Stacked_Bar_Plotter(status_list)
