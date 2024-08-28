@@ -10,18 +10,18 @@
 # 1. Using
 # Step 1: To use the code to draw stacked bar charts, you need to copy the code from 
 #   the handle_outliers function to the Stacked_Bar_Plotter function, which spans from 
-#   line 51 to 362 (inclusive), and paste it into the Console. Ensure that you have 
+#   line 51 to 369 (inclusive), and paste it into the Console. Ensure that you have 
 #   RStudio installed; if not, please refer to the readme.txt file. These are the 
 #   functions needed to analyze the data and generate the graph.
-# Step 2: Next, copy and paste the code in line 367 into the Console. This will invoke 
+# Step 2: Next, copy and paste the code in line 261 into the Console. This will invoke 
 #   the categorization code. A prompt will appear in the Console asking you to enter the number 
 #   of apps you wish to analyze. After entering this number, open the .csv files one by one,
 #   make sure that the name of your files is the corresponding name of the apps.
 # Step 3: Once all the files have been opened and the code execution is complete, copy and 
-#   paste the code from line 370 into the Console. This code will invoke the plotting function. 
+#   paste the code from line 374 into the Console. This code will invoke the plotting function. 
 #   Type one of the three directions (Pitch, Yaw, Roll) to generate the final plot.
 # Step 4: To obtain plots for all three directions, repeat the process by copying and pasting 
-#   the code in line 281 after completing Steps 1 and 2. Enter "Pitch," "Yaw," and "Roll" 
+#   the code in line 377 after completing Steps 1 and 2. Enter "Pitch," "Yaw," and "Roll" 
 #   each time to generate the respective plots.
 
 # 2. Reading
@@ -224,9 +224,9 @@ Analysis_Average_Func <- function() {
       f <- file.choose()
       app_data <- read.csv(f)
       
-      pitch_data <- app_data$BodyPitch
-      yaw_data <- app_data$BodyYaw
-      roll_data <- app_data$BodyRoll
+      pitch_data <- app_data$HeadPitch
+      yaw_data <- app_data$HeadYaw
+      roll_data <- app_data$HeadRoll
       app_time <- app_data$time
       
       valid_data_length <- length(app_time)
@@ -313,7 +313,6 @@ Stacked_Bar_Plotter <- function(status_list) {
     }
     
   }
-  
   # Iterate through each app, calculating the proportion of each action
   for (i in 1:2) {
     if (i == 1) {
@@ -336,7 +335,15 @@ Stacked_Bar_Plotter <- function(status_list) {
     data <- rbind(data, data.frame(App = status, Range = range_list[[3]], Proportion = app_data[[4]] / total_angles))
     data <- rbind(data, data.frame(App = status, Range = range_list[[2]], Proportion = app_data[[5]] / total_angles))
     data <- rbind(data, data.frame(App = status, Range = range_list[[1]], Proportion = app_data[[6]] / total_angles))
+    
+    print(paste(status, "0-5: ", app_data[[1]] / total_angles))
+    print(paste(status, "5-10: ", app_data[[2]] / total_angles))
+    print(paste(status, "10-15: ", app_data[[3]] / total_angles))
+    print(paste(status, "15-20: ", app_data[[4]] / total_angles))
+    print(paste(status, "20-25: ", app_data[[5]] / total_angles))
+    print(paste(status, ">25: ", app_data[[6]] / total_angles))
   }
+  
   data$Range <- factor(data$Range, levels = c(range_list[[1]], range_list[[2]], range_list[[3]], 
                                               range_list[[4]], range_list[[5]], range_list[[6]]))
   
