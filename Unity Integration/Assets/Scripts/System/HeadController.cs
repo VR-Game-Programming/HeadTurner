@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class HeadController : MonoBehaviour
 {
+    // Sensing
     public OrientationUtility orientationUtility;
+
     // Actuate the yawing angle according to the head rotation
     public DOFCommunication dOFCommunication;
     public ArduinoCommunication arduinoCommunication;

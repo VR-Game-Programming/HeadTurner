@@ -7,18 +7,35 @@ using System.Threading;
 
 public class ArduinoCommunication : MonoBehaviour
 {
+    public enum Mode { Speed, Position }
+    public Mode mode = Mode.Position;
     public string portName = "COM8";
     public int baudRate = 115200;
     const int motorRange = 660;
 
     private SerialPort port;
     int targetLinearMotor = 0;
-    public int TargetLinearMotor{
-        get{
+    public int TargetLinearMotor
+    {
+        get
+        {
             return targetLinearMotor;
         }
-        set{
+        set
+        {
             targetLinearMotor = value;
+        }
+    }
+    int targetMotorSpeed = 0;
+    public int TargetMotorSpeed
+    {
+        get
+        {
+            return targetMotorSpeed;
+        }
+        set
+        {
+            targetMotorSpeed = value;
         }
     }
     int currentMotor = 0;
@@ -59,8 +76,8 @@ public class ArduinoCommunication : MonoBehaviour
     {
         while (true)
         {
+            targetLinearMotor = Mathf.Clamp(targetLinearMotor, -motorRange / 2, motorRange / 2);
             currentMotor = (int)Mathf.Lerp(currentMotor, targetLinearMotor, motorSpeed);
-            currentMotor = Mathf.Clamp(currentMotor, -motorRange / 2, motorRange / 2);
             try
             {
                 Command('p', currentMotor);
@@ -94,22 +111,38 @@ public class ArduinoCommunication : MonoBehaviour
     {
         while (true)
         {
-            if (Math.Abs(currentMotor - targetLinearMotor) > threshold)
+            switch (mode)
             {
-                currentMotor = (int)Mathf.Lerp(currentMotor, targetLinearMotor, motorSpeed);
-                currentMotor = Mathf.Clamp(currentMotor, -motorRange / 2, motorRange / 2);
-                try
-                {
-                    Command('p', currentMotor);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"Failed sending command. Log: \n{e}");
-                }
-            }
-            else
-            {
-                Command('s', 0);
+                case Mode.Speed:
+                    try
+                    {
+                        Command('s', targetMotorSpeed);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"Failed sending command. Log: \n{e}");
+                    }
+                    break;
+                case Mode.Position:
+
+                    if (Math.Abs(currentMotor - targetLinearMotor) > threshold)
+                    {
+                        targetLinearMotor = Mathf.Clamp(targetLinearMotor, -motorRange / 2, motorRange / 2);
+                        currentMotor = (int)Mathf.Lerp(currentMotor, targetLinearMotor, motorSpeed);
+                        try
+                        {
+                            Command('p', currentMotor);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError($"Failed sending command. Log: \n{e}");
+                        }
+                    }
+                    else
+                    {
+                        Command('s', 0);
+                    }
+                    break;
             }
             Thread.Sleep(100); // 100 ms
         }
