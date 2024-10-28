@@ -61,7 +61,7 @@ public class DistanceSensor : MonoBehaviour
     void Update()
     {
         dist = Vector3.Distance(head.position, pillow.position);
-        Debug.Log("dist:" + dist);
+        //Debug.Log("dist:" + dist);
         if (currentFrame < averagingFrames)
         {
             distAvg += dist;

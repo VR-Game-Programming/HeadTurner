@@ -71,7 +71,7 @@
 
 #define MOTOR_ENCODER_PPR				680 // 16(gear ratio)*500(encoder ppr)*4
 
-#define POSITION_CONTROL_P				2000 // 610, 52, 70, 185 for slower motor 6000,100,70,180 for fasterr motor
+#define POSITION_CONTROL_P				2000 // 610, 52, 70, 185 for slower motor 2000,160,40,185 for fasterr motor
 #define POSITION_CONTROL_I  			160
 #define POSITION_CONTROL_D  			40
 #define POSITION_CONTROL_I_Max			185 
