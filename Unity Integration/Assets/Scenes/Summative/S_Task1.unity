@@ -280,8 +280,8 @@ MonoBehaviour:
   Cam: {fileID: 1725543718}
   Viewport: {fileID: 1542296453}
   BodyAnchor: {fileID: 370011473}
-  ParticipantID: 11
-  Condition: 0
+  ParticipantID: 1
+  Condition: 1
   enableEmg: 1
   MaterialsFolder: Materials
   ResultFolder: Result S
@@ -342,6 +342,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+--- !u!4 &370011472 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7080118136817015785, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+  m_PrefabInstance: {fileID: 370011471}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &370011473 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8725537646645423721, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
@@ -1158,6 +1163,10 @@ PrefabInstance:
       propertyPath: headAnchor
       value: 
       objectReference: {fileID: 2038198444}
+    - target: {fileID: 2833068839556788602, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+      propertyPath: trackingAnchor
+      value: 
+      objectReference: {fileID: 2038198444}
     - target: {fileID: 5706189271334748723, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
       propertyPath: m_Name
       value: HeadController
@@ -1202,6 +1211,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8053690443483947345, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+      propertyPath: head
+      value: 
+      objectReference: {fileID: 2038198444}
+    - target: {fileID: 8053690443483947345, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+      propertyPath: pillow
+      value: 
+      objectReference: {fileID: 370011472}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -6,8 +6,11 @@ using System.IO;
 using System.IO.Ports;
 using System.Threading;
 
-public class EMGLogger_O
+public class AngledEMGLogger_O
 {
+    [Header("Orientation Sensing")]
+    public OrientationUtility headOT;
+    [Header("Serial Port")]
     private SerialPort _serialPort;
     private StreamWriter _dataWriter;
     private StreamWriter _timestampWriter;
@@ -29,8 +32,14 @@ public class EMGLogger_O
 
     public enum Status { Start, Waiting, Back, End }
 
-    public EMGLogger_O(string portName = "COM5", int baudRate = 115200, string dirname = "Result")
+    public AngledEMGLogger_O(string portName = "COM5", int baudRate = 115200, string dirname = "Result")
     {
+        headOT = GameObject.FindObjectOfType<HeadController>().headOT;
+        if (headOT == null)
+        {
+            Debug.LogError("Head OrientationUtility is not set");
+            Application.Quit();
+        }
         _serialPort = new SerialPort(portName, baudRate);
         try
         {
@@ -48,11 +57,17 @@ public class EMGLogger_O
 
         _dataWriter = new StreamWriter(data_path);
         _timestampWriter = new StreamWriter(timestamp_path);
-        string header = "range,posture,start,end,";
+        string header = "time,turnedAngle,pitchAngle,yawAngle";
         _timestampWriter.WriteLine(header);
 
         _thread = new Thread(ReadSerialPort);
         _thread.Start();
+    }
+
+    private float getCurrentAngle()
+    {
+        // TODO: Implement this function
+        return headOT.TurnedAngle;
     }
 
     private void ReadSerialPort()
@@ -61,50 +76,25 @@ public class EMGLogger_O
         {
             string data = _serialPort.ReadLine();
             _dataWriter.WriteLine(data);
-            if (_endLogging)
+            string cur_time = "0";
+            try
             {
-                string end_time = data.Split(',')[0];
-                data = _cur_range + ","
-                    + _cur_posture + ","
-                    + _cur_start_time + ","
-                    + end_time + ",";
-                _timestampWriter.WriteLine(data);
-                _endLogging = false;
+                cur_time = data.Split(',')[0];
             }
-            else if (_startLogging)
+            catch (Exception e)
             {
-                string timestamp = data.Split(',')[0];
-                _cur_start_time = timestamp;
-                _startLogging = false;
+                Debug.LogError($"EMG Timestamp cannot be parsed Log: \n{e}");
+                cur_time = "Error";
             }
-
+            float angle = getCurrentAngle();
+            data = cur_time + "," + headOT.TurnedAngle + "," + headOT.PitchAngle + "," + headOT.YawAngle;
+            _timestampWriter.WriteLine(data);
         }
-    }
-
-    public void start_logging(string range, string posture)
-    {
-        _startLogging = true;
-        _cur_range = range;
-        _cur_posture = posture;
-    }
-
-    public void end_logging()
-    {
-        _endLogging = true;
     }
 
     public void close()
     {
         _running = false;
-        if (_endLogging)
-        {
-            string end_time = _serialPort.ReadLine().Split(',')[0];
-            string data = "EOL" + ","
-                + _cur_posture + ","
-                + _cur_start_time + ","
-                + end_time + ",";
-            _timestampWriter.WriteLine(data);
-        }
         _thread.Abort();
         _dataWriter.Close();
         _timestampWriter.Close();

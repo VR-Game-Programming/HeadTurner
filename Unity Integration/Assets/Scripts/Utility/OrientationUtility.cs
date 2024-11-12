@@ -5,48 +5,77 @@ using UnityEngine;
 public class OrientationUtility : MonoBehaviour
 {
     // Using the CenterEyeAnchor under the CameraRig as the head anchor, or use OptiTrack RigidBody
-    public Transform headAnchor;
+    public Transform trackingAnchor;
     // yaw: up, pitch: right, roll: forward/viewing direction
     // direction: up +, left +, CW +
-    Vector3 pitchAxis , yawAxis, rollAxis, calibratedPitchAxis, calibratedYawAxis, calibratedRollAxis, prevPitchAxis, prevYawAxis, prevRollAxis;
+    Vector3 pitchAxis, yawAxis, rollAxis, calibratedPitchAxis, calibratedYawAxis, calibratedRollAxis, prevPitchAxis, prevYawAxis, prevRollAxis;
     float alpha = 0.2f;
     public int averagingFrames = 100;
     bool isCalibrated = false;
-    public bool IsCalibrated{
-        get{
+    public bool IsCalibrated
+    {
+        get
+        {
             return isCalibrated;
         }
     }
-    float rollAngle, pitchAngle, yawAngle;
-    public float RollAngle{
-        get{
-            if(IsCalibrated){
+    float rollAngle, pitchAngle, yawAngle, turnedAngle;
+    public float RollAngle
+    {
+        get
+        {
+            if (IsCalibrated)
+            {
                 return rollAngle;
             }
-            else{
+            else
+            {
                 Debug.LogError("Roll: OrientationUtility is not calibrated, return 0 anyway");
                 return 0;
             }
         }
     }
-    public float PitchAngle{
-        get{
-            if(IsCalibrated){
+    public float PitchAngle
+    {
+        get
+        {
+            if (IsCalibrated)
+            {
                 return pitchAngle;
             }
-            else{
+            else
+            {
                 Debug.LogError("Pitch: OrientationUtility is not calibrated, return 0 anyway");
                 return 0;
             }
         }
     }
-    public float YawAngle{
-        get{
-            if(IsCalibrated){
+    public float YawAngle
+    {
+        get
+        {
+            if (IsCalibrated)
+            {
                 return yawAngle;
             }
-            else{
+            else
+            {
                 Debug.LogError("Yaw: OrientationUtility is not calibrated, return 0 anyway");
+                return 0;
+            }
+        }
+    }
+    public float TurnedAngle
+    {
+        get
+        {
+            if (IsCalibrated)
+            {
+                return turnedAngle;
+            }
+            else
+            {
+                Debug.LogError("Turned: OrientationUtility is not calibrated, return 0 anyway");
                 return 0;
             }
         }
@@ -54,7 +83,7 @@ public class OrientationUtility : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (headAnchor == null)
+        if (trackingAnchor == null)
         {
             Debug.LogError("HeadAnchor is not set");
             // Quit
@@ -70,9 +99,9 @@ public class OrientationUtility : MonoBehaviour
         // so we need to update them in the Update stage, but only averaging once
         if (averagingFrames > 0)
         {
-            calibratedPitchAxis += headAnchor.right;
-            calibratedYawAxis += headAnchor.up;
-            calibratedRollAxis += headAnchor.forward;
+            calibratedPitchAxis += trackingAnchor.right;
+            calibratedYawAxis += trackingAnchor.up;
+            calibratedRollAxis += trackingAnchor.forward;
             averagingFrames -= 1;
         }
         else if (averagingFrames == 0)
@@ -91,9 +120,9 @@ public class OrientationUtility : MonoBehaviour
         else
         {
             // cascading calculation of the model angles representing the head orientation
-            pitchAxis = headAnchor.right*alpha + prevPitchAxis*(1-alpha);
-            yawAxis = headAnchor.up*alpha + prevYawAxis*(1-alpha);
-            rollAxis = headAnchor.forward*alpha + prevRollAxis*(1-alpha);
+            pitchAxis = trackingAnchor.right * alpha + prevPitchAxis * (1 - alpha);
+            yawAxis = trackingAnchor.up * alpha + prevYawAxis * (1 - alpha);
+            rollAxis = trackingAnchor.forward * alpha + prevRollAxis * (1 - alpha);
             // pitch
             pitchAngle = Vector3.SignedAngle(yawAxis, calibratedYawAxis, calibratedPitchAxis);
             //pitchAngle = Vector3.SignedAngle(yawAxis, calibratedYawAxis, pitchAxis);
@@ -105,14 +134,17 @@ public class OrientationUtility : MonoBehaviour
             rollAngle = Vector3.SignedAngle(yawAxis, neutralYawAxis, rollAxis);
 
             // visualize the yaw axis (green) and neutral direction (blue) during the game
-            Debug.DrawRay(headAnchor.position, yawAxis * 500, Color.green);
-            Debug.DrawRay(headAnchor.position, rollAxis * 500, Color.blue);
-            Debug.DrawRay(headAnchor.position, neutralRollAxis * 500, Color.black);
-            Debug.DrawRay(headAnchor.position, neutralYawAxis * 500, Color.black);
-            Debug.DrawRay(headAnchor.position, calibratedPitchAxis * 500, Color.red);
+            Debug.DrawRay(trackingAnchor.position, yawAxis * 500, Color.green);
+            Debug.DrawRay(trackingAnchor.position, rollAxis * 500, Color.blue);
+            Debug.DrawRay(trackingAnchor.position, neutralRollAxis * 500, Color.black);
+            Debug.DrawRay(trackingAnchor.position, neutralYawAxis * 500, Color.black);
+            Debug.DrawRay(trackingAnchor.position, calibratedPitchAxis * 500, Color.red);
             prevYawAxis = yawAxis;
             prevRollAxis = rollAxis;
             prevPitchAxis = pitchAxis;
+
+            // turned angle
+            turnedAngle = Vector3.Angle(calibratedRollAxis, rollAxis);
         }
     }
 }

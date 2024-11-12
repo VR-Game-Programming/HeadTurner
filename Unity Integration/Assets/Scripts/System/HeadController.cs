@@ -4,36 +4,52 @@ using UnityEngine;
 
 public class HeadController : MonoBehaviour
 {
-    // Sensing
-    public OrientationUtility orientationUtility;
+    [Header("Sensing")]
+    // Head and Pillow orientation sensing    
+    public OrientationUtility headOT;
+    public DistanceSensor distanceSensor;
+    // two control mode, default angle+distance, if there's no pillowOT, use the angle only
+    [Header("Mode")]
+    public Mode mode = Mode.AngleDistance;
+    public enum Mode { AngleDistance, AngleOnly };
 
-    // Actuate the yawing angle according to the head rotation
+    [Header("Controller")]
+    public float distThreshold = 0.02f;
+    public float angleThreshold = 0.1f;
+    public float timeDelay = 0.5f;
+    float time = 0;
+    public enum Status { Stay, PitchUp, PitchDown };
+    public Status status = Status.Stay;
+
+    [Header("Actuation")]
     public DOFCommunication dOFCommunication;
     public ArduinoCommunication arduinoCommunication;
+    public int step = 11;
     public bool enableActuation = true;
-    float yawHeadRelativeToTrunk, pitchAngle;
+    float yawHeadRelativeToTrunk, pitchAngle, prevPitchAngle = 0;
     float targetPlatformMotor = 0.5f;
     int targetLinearMotor;
     const float stroke = 330f; // 1250 for slower moteor
     private void Start()
     {
-        // Find the OrientationUtility script in the scene
-        if (orientationUtility == null)
+        if (distanceSensor == null)
         {
-            orientationUtility = FindObjectOfType<OrientationUtility>();
+            mode = Mode.AngleOnly;
+            Debug.LogWarning("PillowTransform is not set, switch to AngleOnly mode");
+        }
+        if (headOT == null)
+        {
+            headOT = FindObjectOfType<OrientationUtility>();
         }
         //Find the Communication script in the scene
         dOFCommunication = FindObjectOfType<DOFCommunication>();
         arduinoCommunication = FindObjectOfType<ArduinoCommunication>();
-        if (dOFCommunication == null || arduinoCommunication == null || orientationUtility == null)
+        if (dOFCommunication == null || arduinoCommunication == null || headOT == null)
         {
             Debug.LogError("Sensing or Communication is not set");
             // Quit
             Application.Quit();
         }
-        // Set the yaw axis as the y-axis of the head anchor, 
-        // Set the viewing direction as the forward direction of the head anchor
-        // averaging for averagingFrames frames to reduce noise
     }
     private void Update()
     {
@@ -41,11 +57,11 @@ public class HeadController : MonoBehaviour
         {
             return;
         }
-        if (orientationUtility.IsCalibrated)
+        if (headOT.IsCalibrated)
         {
-            // Get the Yaw angle from the OrientationUtility script
-            yawHeadRelativeToTrunk = orientationUtility.YawAngle + (targetPlatformMotor - 0.5f) * 23;
             // Body Yawing
+            // Get the Yaw angle from the OrientationUtility script
+            yawHeadRelativeToTrunk = headOT.YawAngle + (targetPlatformMotor - 0.5f) * 23;
             // The yawing range is (0,0) and (1,1), the neutral position is (0.5,0.5)
             // The error is normalized to the range (-0.5,0.5), then shifted to the range (0,1)
             // targetAngle is mapped from the error of (-90,90) to (0,1)
@@ -55,12 +71,58 @@ public class HeadController : MonoBehaviour
             dOFCommunication.SetMotorPos(targetPlatformMotor, targetPlatformMotor);
 
             // Head Pitching
-            //pitchAngle = Mathf.Clamp(orientationUtility.PitchAngle, -45, 45);
-            pitchAngle = Mathf.Clamp(orientationUtility.PitchAngle, -45, 20);
-            targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
-            arduinoCommunication.TargetLinearMotor = targetLinearMotor;
-            // Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString() + "|pitchAngle: " + pitchAngle.ToString());
-            // Debug.Log("|targetLinearMotor: " + targetLinearMotor.ToString());
+            pitchAngle = headOT.PitchAngle;
+            if (mode == Mode.AngleOnly)
+            {
+                pitchAngle = Mathf.Clamp(pitchAngle, -45, 20);
+                targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
+                arduinoCommunication.TargetLinearMotor = targetLinearMotor;
+            }
+            else if (mode == Mode.AngleDistance && distanceSensor.IsCalibrated)
+            {
+                switch (status)
+                {
+                    case Status.Stay:
+                        if (distanceSensor.Dist > distanceSensor.DistAvg + distThreshold)
+                        {
+                            status = Status.PitchDown;
+                        }
+                        if (pitchAngle - prevPitchAngle > angleThreshold)
+                        {
+                            status = Status.PitchUp;
+                        }
+                        break;
+                    case Status.PitchUp:
+                        pitchAngle = Mathf.Clamp(pitchAngle, -45, 20);
+                        targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
+                        arduinoCommunication.TargetLinearMotor = targetLinearMotor;
+                        // Delay for actuator to move
+                        time += Time.deltaTime;
+                        if (time > timeDelay)
+                        {
+                            if (distanceSensor.Dist <= distanceSensor.DistAvg + distThreshold)
+                            {
+                                status = Status.Stay;
+                            }
+                            time = 0;
+                        }
+                        break;
+                    case Status.PitchDown:
+                        targetLinearMotor += step;
+                        arduinoCommunication.TargetLinearMotor = targetLinearMotor;
+                        if (distanceSensor.Dist <= distanceSensor.DistAvg)
+                        {
+                            status = Status.Stay;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                prevPitchAngle = pitchAngle;
+            }
+            // Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString());
+            Debug.Log("|pitchAngle: " + pitchAngle.ToString());
+            Debug.Log("|targetLinearMotor: " + targetLinearMotor.ToString());
         }
     }
 }

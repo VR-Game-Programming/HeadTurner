@@ -6,7 +6,7 @@ using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
 using UnityEngine.UI;
 public enum Condition { NormalBed, ActuatedBed }
-public enum Apps { Ecosphere, Archery }
+public enum Apps { Ecosphere, FPS }
 public class SummativeRecorder : MonoBehaviour
 {
     [Header("Data Pipeline Settings")]
@@ -14,7 +14,9 @@ public class SummativeRecorder : MonoBehaviour
 
     public Apps app = Apps.Ecosphere;
     public bool usingEMG = true;
+    public bool isAngled = true;
     static EMGLogger_O emgLogger;
+    static AngledEMGLogger_O angledEMGLogger;
     public Condition condition = Condition.NormalBed;
     private FileStream fs;
     private StreamWriter sw;
@@ -46,12 +48,14 @@ public class SummativeRecorder : MonoBehaviour
         }
         if (usingEMG)
         {
-            // get the EMGLogger_O component from the scene
-            if (emgLogger == null)
+            string emg_folder = Path.Combine(folder, "emg_data", $"P_{participantID}_{condition}");
+            if (isAngled)
             {
-                string emg_folder = Path.Combine(folder, "emg_data", $"P_{participantID}_{condition}");
+                angledEMGLogger = new AngledEMGLogger_O(dirname: emg_folder);
+            }
+            else
+            {
                 emgLogger = new EMGLogger_O(dirname: emg_folder);
-                //Debug.Log("EMGLogger_O created");
             }
         }
     }
@@ -69,7 +73,11 @@ public class SummativeRecorder : MonoBehaviour
             isRecording = !isRecording;
             if (usingEMG)
             {
-                emgLogger.start_logging(app.ToString(), condition.ToString());
+                // if isAngled, the AngledEMGLogger will start logging upon initialization
+                if (!isAngled)
+                {
+                    emgLogger.start_logging(app.ToString(), condition.ToString());
+                }
                 //Debug.Log("EMG start logging");
             }
         }
@@ -83,8 +91,15 @@ public class SummativeRecorder : MonoBehaviour
     {
         if (usingEMG)
         {
-            emgLogger.end_logging();
-            emgLogger.close();
+            if (isAngled)
+            {
+                angledEMGLogger.close();
+            }
+            else
+            {
+                emgLogger.end_logging();
+                emgLogger.close();
+            }
         }
         if (sw != null)
         {

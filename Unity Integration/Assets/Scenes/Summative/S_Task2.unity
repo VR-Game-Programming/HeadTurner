@@ -429,7 +429,7 @@ MonoBehaviour:
   Viewport: {fileID: 110278254}
   headOT: {fileID: 805604352}
   bodyOT: {fileID: 1671656460}
-  ParticipantID: 11
+  ParticipantID: 1
   Condition: 0
   enableEmg: 1
   MaterialsFolder: Materials
@@ -498,7 +498,7 @@ PrefabInstance:
   m_SourcePrefab: {fileID: 100100000, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
 --- !u!4 &663501967 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 8908701980807103678, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+  m_CorrespondingSourceObject: {fileID: 7080118136817015785, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
   m_PrefabInstance: {fileID: 663501966}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &663501968 stripped
@@ -657,7 +657,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2eea22ffa2020cc4fa0c5b7871157d67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  headAnchor: {fileID: 663501968}
+  trackingAnchor: {fileID: 663501968}
   averagingFrames: 100
 --- !u!4 &805604353
 Transform:
@@ -761,6 +761,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &848427954 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8908701980807103678, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+  m_PrefabInstance: {fileID: 663501966}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1031101184
 GameObject:
   m_ObjectHideFlags: 0
@@ -1304,7 +1309,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2eea22ffa2020cc4fa0c5b7871157d67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  headAnchor: {fileID: 663501967}
+  trackingAnchor: {fileID: 848427954}
   averagingFrames: 100
 --- !u!4 &1671656461
 Transform:
@@ -1421,6 +1426,10 @@ PrefabInstance:
       propertyPath: headAnchor
       value: 
       objectReference: {fileID: 663501968}
+    - target: {fileID: 2833068839556788602, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+      propertyPath: trackingAnchor
+      value: 
+      objectReference: {fileID: 663501968}
     - target: {fileID: 5706189271334748723, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
       propertyPath: m_Name
       value: HeadController
@@ -1465,6 +1474,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8053690443483947345, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+      propertyPath: head
+      value: 
+      objectReference: {fileID: 663501968}
+    - target: {fileID: 8053690443483947345, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+      propertyPath: pillow
+      value: 
+      objectReference: {fileID: 663501967}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
