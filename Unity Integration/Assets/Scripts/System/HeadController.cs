@@ -74,8 +74,7 @@ public class HeadController : MonoBehaviour
             pitchAngle = headOT.PitchAngle;
             if (mode == Mode.AngleOnly)
             {
-                pitchAngle = Mathf.Clamp(pitchAngle, -45, 20);
-                targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
+                targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((Mathf.Clamp(pitchAngle, -45, 20) + 45) * Mathf.Deg2Rad)));
                 arduinoCommunication.TargetLinearMotor = targetLinearMotor;
             }
             else if (mode == Mode.AngleDistance && distanceSensor.IsCalibrated)
@@ -93,8 +92,7 @@ public class HeadController : MonoBehaviour
                         }
                         break;
                     case Status.PitchUp:
-                        pitchAngle = Mathf.Clamp(pitchAngle, -45, 20);
-                        targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((pitchAngle + 45) * Mathf.Deg2Rad)));
+                        targetLinearMotor = (int)(stroke * (1 - Mathf.Tan((Mathf.Clamp(pitchAngle, -45, 20) + 45) * Mathf.Deg2Rad)));
                         arduinoCommunication.TargetLinearMotor = targetLinearMotor;
                         // Delay for actuator to move
                         time += Time.deltaTime;
