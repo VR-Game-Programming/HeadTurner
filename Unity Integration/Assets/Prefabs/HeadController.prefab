@@ -104,7 +104,9 @@ MonoBehaviour:
   status: 0
   dOFCommunication: {fileID: 309499180729381336}
   arduinoCommunication: {fileID: 7969152946200488261}
+  step: 11
   enableActuation: 1
+  canReturn: 0
 --- !u!1 &5891413077089299189
 GameObject:
   m_ObjectHideFlags: 0

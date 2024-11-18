@@ -2553,6 +2553,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1150258792566789741}
     - target: {fileID: 1365373774074596417, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
+      propertyPath: canReturn
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1365373774074596417, guid: d370b6aeb014441448b43eecb934b2e9, type: 3}
       propertyPath: timeDelay
       value: 0.5
       objectReference: {fileID: 0}

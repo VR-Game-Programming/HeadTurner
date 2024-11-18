@@ -346,6 +346,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 86545248}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &94217749 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8908701980807103678, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+  m_PrefabInstance: {fileID: 341877793}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &330586463
 GameObject:
   m_ObjectHideFlags: 0
@@ -391,7 +396,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1438233528319916598, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1438233528319916599, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
       propertyPath: DrawMarkers
@@ -643,7 +648,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2eea22ffa2020cc4fa0c5b7871157d67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  headAnchor: {fileID: 758376898}
+  trackingAnchor: {fileID: 94217749}
   averagingFrames: 100
 --- !u!4 &687386305
 Transform:
@@ -878,7 +883,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5519807743346592588, guid: c89b2c4e711f8a14ba3df7e4b3c71f12, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5519807743346592589, guid: c89b2c4e711f8a14ba3df7e4b3c71f12, type: 3}
       propertyPath: m_LocalPosition.x

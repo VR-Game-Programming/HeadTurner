@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -27,6 +28,8 @@ public class HeadController : MonoBehaviour
     public int step = 11;
     public bool enableActuation = true;
     float yawHeadRelativeToTrunk, pitchAngle, prevPitchAngle = 0;
+    float yawAngle, prevYawAngle = 0, returnFactor = 1;
+    public bool canReturn = true;
     float targetPlatformMotor = 0.5f;
     int targetLinearMotor;
     const float stroke = 330f; // 1250 for slower moteor
@@ -61,14 +64,31 @@ public class HeadController : MonoBehaviour
         {
             // Body Yawing
             // Get the Yaw angle from the OrientationUtility script
-            yawHeadRelativeToTrunk = headOT.YawAngle + (targetPlatformMotor - 0.5f) * 23;
+            yawAngle = headOT.YawAngle;
+            yawHeadRelativeToTrunk = yawAngle - (targetPlatformMotor - 0.5f) * 23;
+            Debug.Log("|yawAngle: " + yawAngle.ToString());
+            Debug.Log("|yawHeadRelativeToTrunk: " + yawHeadRelativeToTrunk.ToString());
             // The yawing range is (0,0) and (1,1), the neutral position is (0.5,0.5)
             // The error is normalized to the range (-0.5,0.5), then shifted to the range (0,1)
             // targetAngle is mapped from the error of (-90,90) to (0,1)
             // Debug.Log(); // -180 ~ +180
-            targetPlatformMotor = yawHeadRelativeToTrunk / 160 + 0.5f;
+            targetPlatformMotor = yawHeadRelativeToTrunk / 140 + 0.5f;
             targetPlatformMotor = Mathf.Clamp(targetPlatformMotor, 0, 1);
+            if (canReturn)
+            {
+                if (yawAngle >23 && Mathf.Abs(prevYawAngle - yawAngle) > 1f)
+                {
+                    // the head yaw is returning to the neutral position
+                    returnFactor *= Mathf.Abs(yawAngle) / Mathf.Abs(prevYawAngle);
+                    targetPlatformMotor *= returnFactor;
+                }
+                else
+                {
+                    returnFactor = 1;
+                }
+            }
             dOFCommunication.SetMotorPos(targetPlatformMotor, targetPlatformMotor);
+            prevYawAngle = yawAngle;
 
             // Head Pitching
             pitchAngle = headOT.PitchAngle;
@@ -119,8 +139,8 @@ public class HeadController : MonoBehaviour
                 prevPitchAngle = pitchAngle;
             }
             // Debug.Log("yawRel: " + yawHeadRelativeToTrunk.ToString());
-            Debug.Log("|pitchAngle: " + pitchAngle.ToString());
-            Debug.Log("|targetLinearMotor: " + targetLinearMotor.ToString());
+            // Debug.Log("|pitchAngle: " + pitchAngle.ToString());
+            // Debug.Log("|targetLinearMotor: " + targetLinearMotor.ToString());
         }
     }
 }

@@ -22,7 +22,7 @@ public class DOFCommunication : MonoBehaviour
     }
     int[] middleMotor = { motorRange / 2, motorRange / 2 };
     public int targerLeftMotor, targetRightMotor;
-    public float motorSpeed = 10f;
+    public float motorSpeed = 7f;
     protected int currentLeftMotor, currentRightMotor;
     // Use this for initialization
     void Awake()

@@ -131,13 +131,18 @@ public class OrientationUtility : MonoBehaviour
             yawAngle = Vector3.SignedAngle(rollAxis, neutralRollAxis, yawAxis);
             // roll
             Vector3 neutralYawAxis = Vector3.Cross(rollAxis, calibratedPitchAxis);
+            // prevent the rollAngle from flipping
+            if(Vector3.Dot(neutralYawAxis, prevYawAxis) < 0)
+            {
+                neutralYawAxis = -neutralYawAxis;
+            }
             rollAngle = Vector3.SignedAngle(yawAxis, neutralYawAxis, rollAxis);
 
             // visualize the yaw axis (green) and neutral direction (blue) during the game
             Debug.DrawRay(trackingAnchor.position, yawAxis * 500, Color.green);
             Debug.DrawRay(trackingAnchor.position, rollAxis * 500, Color.blue);
-            Debug.DrawRay(trackingAnchor.position, neutralRollAxis * 500, Color.black);
-            Debug.DrawRay(trackingAnchor.position, neutralYawAxis * 500, Color.black);
+            Debug.DrawRay(trackingAnchor.position, neutralYawAxis * 500, Color.cyan);
+            Debug.DrawRay(trackingAnchor.position, neutralRollAxis * 500, Color.magenta);
             Debug.DrawRay(trackingAnchor.position, calibratedPitchAxis * 500, Color.red);
             prevYawAxis = yawAxis;
             prevRollAxis = rollAxis;
