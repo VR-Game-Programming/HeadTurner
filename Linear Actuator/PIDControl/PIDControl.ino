@@ -23,6 +23,13 @@ static int iSpeed = 0 ;
 static char cControlMode = 0 ;
 
 // Encoder myEnc(PIN_ENCODER_A, PIN_ENCODER_B ) ;
+/*Speed and Acceleration Measurement*/
+int prevPos = 0;
+float prevSpeed = 0;
+float currSpeed;
+float maxSpeed = 0;
+float currAcc;
+float maxAcc = 0;
 
 void setup() {
   Hardware_Setup() ;
@@ -171,8 +178,24 @@ void USB_Plot_Task(void ) {
       Serial.print(slSet_Point ) ;
       Serial.print(" ") ;
       Serial.println(slEncoder_Counter ) ;
+//      Measurement_Task(slEncoder_Counter);
     }
   }
+}
+
+void Measurement_Task(int currPos) {
+  currSpeed = (float)(currPos - prevPos) / MOTOR_ENCODER_PPR * 0.2 / (TIME_USB_MS_PLOT) * 1000;
+  currAcc = (currSpeed - prevSpeed) / (TIME_USB_MS_PLOT) * 1000;
+  if (maxSpeed < abs(currSpeed)) {
+    maxSpeed = abs(currSpeed);
+  }
+  if (maxAcc < abs(currAcc)) {
+    maxAcc = abs(currAcc);
+  }
+  prevSpeed = currSpeed;
+  prevPos = currPos;
+  Serial.println("MaxSpeed:" + String(maxSpeed));
+  Serial.println("MaxAcc:" + String(maxAcc));
 }
 
 /*== Motor Function ==*/

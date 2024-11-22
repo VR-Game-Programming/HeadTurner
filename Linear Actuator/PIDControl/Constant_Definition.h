@@ -46,7 +46,7 @@
 #define SUB_CASE_WAVE_PERIOD			'f'
 
 /*==== USB Plot Constant ====*/
-#define TIME_USB_MS_PLOT				10
+#define TIME_USB_MS_PLOT				20
 
 /*==== LED Constant ====*/
 #define TIME_LED_FLASH_MS				25
