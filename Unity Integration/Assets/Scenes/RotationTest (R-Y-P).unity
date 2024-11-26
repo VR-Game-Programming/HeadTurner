@@ -346,11 +346,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 86545248}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &94217749 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8908701980807103678, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-  m_PrefabInstance: {fileID: 341877793}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &330586463
 GameObject:
   m_ObjectHideFlags: 0
@@ -394,14 +389,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: OptiTrackAnchor
       objectReference: {fileID: 0}
-    - target: {fileID: 1438233528319916598, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1438233528319916599, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      propertyPath: DrawMarkers
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1438233528319916600, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.1
@@ -442,60 +429,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1438233529585660198, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      propertyPath: RigidBodyId
-      value: 1014
-      objectReference: {fileID: 0}
-    - target: {fileID: 2452106846824428252, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2452106846824428252, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2452106846824428252, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2452106846824428252, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2452106846824428252, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2452106846824428253, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      propertyPath: m_Name
-      value: Head
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2452106846824428253, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 341877795}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
---- !u!1 &341877794 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2452106846824428253, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
+--- !u!4 &341877795 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2452106846824428252, guid: 7ac635baa876d614ebc7fb8042dea239, type: 3}
   m_PrefabInstance: {fileID: 341877793}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &341877795
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 341877794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 344bd5e8b7be79f4f8d146f47ced6235, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  orientationUtility: {fileID: 0}
 --- !u!1 &562200663
 GameObject:
   m_ObjectHideFlags: 0
@@ -648,7 +591,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2eea22ffa2020cc4fa0c5b7871157d67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trackingAnchor: {fileID: 94217749}
+  trackingAnchor: {fileID: 341877795}
   averagingFrames: 100
 --- !u!4 &687386305
 Transform:
@@ -1186,7 +1129,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 344bd5e8b7be79f4f8d146f47ced6235, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  orientationUtility: {fileID: 0}
+  orientationUtility: {fileID: 687386304}
+  dirName: Measurement
+  logPeriod: 1
 --- !u!4 &1049002783
 Transform:
   m_ObjectHideFlags: 0
